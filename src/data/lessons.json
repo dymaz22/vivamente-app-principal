@@ -1,0 +1,73 @@
+[
+  {
+    "id": "1",
+    "program_id": "1",
+    "position": 1,
+    "video_url": "https://example.com/video1.mp4",
+    "title_pt": "Introdução ao Mindfulness",
+    "title_en": "Introduction to Mindfulness",
+    "title_es": "Introducción al Mindfulness",
+    "content_pt": "Nesta primeira lição, você aprenderá o que é mindfulness e como essa prática pode transformar sua vida diária. Exploraremos os conceitos básicos e os benefícios científicos comprovados.",
+    "content_en": "In this first lesson, you will learn what mindfulness is and how this practice can transform your daily life. We will explore basic concepts and proven scientific benefits.",
+    "content_es": "En esta primera lección, aprenderás qué es mindfulness y cómo esta práctica puede transformar tu vida diaria. Exploraremos conceptos básicos y beneficios científicos probados.",
+    "duration": "15 min",
+    "status": "completed"
+  },
+  {
+    "id": "2",
+    "program_id": "1",
+    "position": 2,
+    "video_url": "https://example.com/video2.mp4",
+    "title_pt": "Respiração Consciente",
+    "title_en": "Conscious Breathing",
+    "title_es": "Respiración Consciente",
+    "content_pt": "Aprenda técnicas fundamentais de respiração consciente que servem como base para toda prática de mindfulness. Exercícios práticos incluídos.",
+    "content_en": "Learn fundamental conscious breathing techniques that serve as the foundation for all mindfulness practice. Practical exercises included.",
+    "content_es": "Aprende técnicas fundamentales de respiración consciente que sirven como base para toda práctica de mindfulness. Ejercicios prácticos incluidos.",
+    "duration": "20 min",
+    "status": "completed"
+  },
+  {
+    "id": "3",
+    "program_id": "1",
+    "position": 3,
+    "video_url": "https://example.com/video3.mp4",
+    "title_pt": "Observação dos Pensamentos",
+    "title_en": "Observing Thoughts",
+    "title_es": "Observación de Pensamientos",
+    "content_pt": "Desenvolva a habilidade de observar seus pensamentos sem julgamento. Uma competência essencial para o bem-estar mental.",
+    "content_en": "Develop the ability to observe your thoughts without judgment. An essential skill for mental well-being.",
+    "content_es": "Desarrolla la habilidad de observar tus pensamientos sin juicio. Una competencia esencial para el bienestar mental.",
+    "duration": "18 min",
+    "status": "unlocked"
+  },
+  {
+    "id": "4",
+    "program_id": "1",
+    "position": 4,
+    "video_url": "https://example.com/video4.mp4",
+    "title_pt": "Mindfulness no Corpo",
+    "title_en": "Body Mindfulness",
+    "title_es": "Mindfulness en el Cuerpo",
+    "content_pt": "Explore a conexão mente-corpo através de práticas de escaneamento corporal e consciência física.",
+    "content_en": "Explore the mind-body connection through body scanning practices and physical awareness.",
+    "content_es": "Explora la conexión mente-cuerpo a través de prácticas de escaneo corporal y conciencia física.",
+    "duration": "25 min",
+    "status": "locked"
+  },
+  {
+    "id": "5",
+    "program_id": "1",
+    "position": 5,
+    "video_url": "https://example.com/video5.mp4",
+    "title_pt": "Mindfulness nas Emoções",
+    "title_en": "Emotional Mindfulness",
+    "title_es": "Mindfulness Emocional",
+    "content_pt": "Aprenda a reconhecer e trabalhar com suas emoções de forma consciente e compassiva.",
+    "content_en": "Learn to recognize and work with your emotions in a conscious and compassionate way.",
+    "content_es": "Aprende a reconocer y trabajar con tus emociones de manera consciente y compasiva.",
+    "duration": "22 min",
+    "status": "locked"
+  }
+]
+

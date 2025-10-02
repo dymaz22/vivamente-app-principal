@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "title": "Tomar café mindfully",
+    "completed": false,
+    "due_date": "2024-01-15",
+    "category": "Rotina Matinal"
+  },
+  {
+    "id": "2",
+    "title": "Exposição solar matinal",
+    "completed": true,
+    "due_date": "2024-01-15",
+    "category": "Rotina Matinal"
+  },
+  {
+    "id": "3",
+    "title": "Exercício físico",
+    "completed": false,
+    "due_date": "2024-01-15",
+    "category": "Menu Dopamina"
+  },
+  {
+    "id": "4",
+    "title": "Leitura de 15 minutos",
+    "completed": true,
+    "due_date": "2024-01-15",
+    "category": "Desenvolvimento"
+  },
+  {
+    "id": "5",
+    "title": "Conversar com amigos",
+    "completed": false,
+    "due_date": "2024-01-15",
+    "category": "Social"
+  }
+]
+

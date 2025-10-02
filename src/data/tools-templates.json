@@ -1,0 +1,123 @@
+[
+  {
+    "id": "1",
+    "icon_name": "coffee",
+    "category_pt": "Rotina Matinal",
+    "category_en": "Morning Routine",
+    "category_es": "Rutina Matutina",
+    "title_pt": "Tomar café mindfully",
+    "title_en": "Drink coffee mindfully",
+    "title_es": "Tomar café conscientemente"
+  },
+  {
+    "id": "2",
+    "icon_name": "sun",
+    "category_pt": "Rotina Matinal",
+    "category_en": "Morning Routine",
+    "category_es": "Rutina Matutina",
+    "title_pt": "Exposição solar matinal",
+    "title_en": "Morning sun exposure",
+    "title_es": "Exposición solar matutina"
+  },
+  {
+    "id": "3",
+    "icon_name": "stretch-horizontal",
+    "category_pt": "Rotina Matinal",
+    "category_en": "Morning Routine",
+    "category_es": "Rutina Matutina",
+    "title_pt": "Alongamento matinal",
+    "title_en": "Morning stretching",
+    "title_es": "Estiramiento matutino"
+  },
+  {
+    "id": "4",
+    "icon_name": "heart",
+    "category_pt": "Menu Dopamina",
+    "category_en": "Dopamine Menu",
+    "category_es": "Menú Dopamina",
+    "title_pt": "Exercício físico",
+    "title_en": "Physical exercise",
+    "title_es": "Ejercicio físico"
+  },
+  {
+    "id": "5",
+    "icon_name": "music",
+    "category_pt": "Menu Dopamina",
+    "category_en": "Dopamine Menu",
+    "category_es": "Menú Dopamina",
+    "title_pt": "Ouvir música favorita",
+    "title_en": "Listen to favorite music",
+    "title_es": "Escuchar música favorita"
+  },
+  {
+    "id": "6",
+    "icon_name": "palette",
+    "category_pt": "Menu Dopamina",
+    "category_en": "Dopamine Menu",
+    "category_es": "Menú Dopamina",
+    "title_pt": "Atividade criativa",
+    "title_en": "Creative activity",
+    "title_es": "Actividad creativa"
+  },
+  {
+    "id": "7",
+    "icon_name": "book",
+    "category_pt": "Desenvolvimento",
+    "category_en": "Development",
+    "category_es": "Desarrollo",
+    "title_pt": "Leitura de 15 minutos",
+    "title_en": "15-minute reading",
+    "title_es": "Lectura de 15 minutos"
+  },
+  {
+    "id": "8",
+    "icon_name": "brain",
+    "category_pt": "Desenvolvimento",
+    "category_en": "Development",
+    "category_es": "Desarrollo",
+    "title_pt": "Meditação guiada",
+    "title_en": "Guided meditation",
+    "title_es": "Meditación guiada"
+  },
+  {
+    "id": "9",
+    "icon_name": "pen-tool",
+    "category_pt": "Desenvolvimento",
+    "category_en": "Development",
+    "category_es": "Desarrollo",
+    "title_pt": "Journaling reflexivo",
+    "title_en": "Reflective journaling",
+    "title_es": "Diario reflexivo"
+  },
+  {
+    "id": "10",
+    "icon_name": "users",
+    "category_pt": "Social",
+    "category_en": "Social",
+    "category_es": "Social",
+    "title_pt": "Conversar com amigos",
+    "title_en": "Talk with friends",
+    "title_es": "Conversar con amigos"
+  },
+  {
+    "id": "11",
+    "icon_name": "phone",
+    "category_pt": "Social",
+    "category_en": "Social",
+    "category_es": "Social",
+    "title_pt": "Ligar para família",
+    "title_en": "Call family",
+    "title_es": "Llamar a la familia"
+  },
+  {
+    "id": "12",
+    "icon_name": "heart-handshake",
+    "category_pt": "Social",
+    "category_en": "Social",
+    "category_es": "Social",
+    "title_pt": "Ato de gentileza",
+    "title_en": "Act of kindness",
+    "title_es": "Acto de bondad"
+  }
+]
+

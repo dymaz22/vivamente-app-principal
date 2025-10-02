@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+    "title_pt": "Mindfulness Básico",
+    "title_en": "Basic Mindfulness",
+    "title_es": "Mindfulness Básico",
+    "description_pt": "Aprenda os fundamentos da atenção plena para reduzir o estresse e aumentar o bem-estar",
+    "description_en": "Learn the fundamentals of mindfulness to reduce stress and increase well-being",
+    "description_es": "Aprende los fundamentos de la atención plena para reducir el estrés y aumentar el bienestar",
+    "lessons_count": 8,
+    "duration": "4 semanas"
+  },
+  {
+    "id": "2",
+    "image_url": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
+    "title_pt": "Gestão de Ansiedade",
+    "title_en": "Anxiety Management",
+    "title_es": "Gestión de Ansiedad",
+    "description_pt": "Técnicas comprovadas para controlar a ansiedade e desenvolver resiliência emocional",
+    "description_en": "Proven techniques to control anxiety and develop emotional resilience",
+    "description_es": "Técnicas probadas para controlar la ansiedad y desarrollar resistencia emocional",
+    "lessons_count": 10,
+    "duration": "5 semanas"
+  },
+  {
+    "id": "3",
+    "image_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop",
+    "title_pt": "Sono Reparador",
+    "title_en": "Restorative Sleep",
+    "title_es": "Sueño Reparador",
+    "description_pt": "Melhore a qualidade do seu sono com técnicas de relaxamento e higiene do sono",
+    "description_en": "Improve your sleep quality with relaxation techniques and sleep hygiene",
+    "description_es": "Mejora la calidad de tu sueño con técnicas de relajación e higiene del sueño",
+    "lessons_count": 6,
+    "duration": "3 semanas"
+  },
+  {
+    "id": "4",
+    "image_url": "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop",
+    "title_pt": "Autoestima e Confiança",
+    "title_en": "Self-Esteem and Confidence",
+    "title_es": "Autoestima y Confianza",
+    "description_pt": "Desenvolva uma autoimagem positiva e aumente sua confiança pessoal",
+    "description_en": "Develop a positive self-image and increase your personal confidence",
+    "description_es": "Desarrolla una autoimagen positiva y aumenta tu confianza personal",
+    "lessons_count": 7,
+    "duration": "4 semanas"
+  }
+]
+
