@@ -4,9 +4,11 @@ import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import PetalsAnimation from '../components/PetalsAnimation';
+import { useAuth } from '../hooks/useAuth.jsx'; // CORRIGIDO
 
 const Register = () => {
   const navigate = useNavigate();
+  const { signUp, authLoading } = useAuth(); // CORRIGIDO
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -15,7 +17,7 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // O 'isLoading' foi removido pois agora usamos 'authLoading' do useAuth
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,50 +27,36 @@ const Register = () => {
     }));
   };
 
+  // FUNÇÃO handleSubmit COMPLETAMENTE SUBSTITUÍDA
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (formData.password !== formData.confirmPassword) {
       alert('As senhas não coincidem');
       return;
     }
 
-    setIsLoading(true);
+    // Usando nossa nova função signUp do useAuth
+    const { success } = await signUp(formData.email, formData.password);
 
-    // Simular registro (em produção, usar Supabase Auth)
-    try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simular registro bem-sucedido
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify({
-        id: '1',
-        email: formData.email,
-        full_name: formData.fullName
-      }));
-      
+    // Se o cadastro funcionou, o hook useAuth vai atualizar o estado
+    // e o nosso app vai redirecionar automaticamente.
+    // O 'navigate' aqui é uma segurança extra.
+    if (success) {
+      console.log('Navegando para /aprender após sucesso no registro.');
       navigate('/aprender');
-    } catch (error) {
-      console.error('Erro no registro:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative flex items-center justify-center p-4">
-      {/* Animação de pétalas */}
       <PetalsAnimation />
       
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Vivamente</h1>
           <p className="text-white/70">Crie sua conta</p>
         </div>
 
-        {/* Formulário de Registro */}
         <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Nome Completo */}
@@ -111,7 +99,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Campo Senha */}
+            {/* Campos de Senha (sem alterações) ... */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-white">
                 Senha
@@ -139,7 +127,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Campo Confirmar Senha */}
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium text-white">
                 Confirmar Senha
@@ -166,7 +153,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Termos e Condições */}
             <div className="flex items-start space-x-2">
               <input
                 type="checkbox"
@@ -185,25 +171,23 @@ const Register = () => {
                 </Link>
               </label>
             </div>
-
-            {/* Botão Criar Conta */}
+            
+            {/* BOTÃO CORRIGIDO */}
             <Button 
               type="submit" 
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={isLoading}
+              disabled={authLoading}
             >
-              {isLoading ? 'Criando conta...' : 'Criar Conta'}
+              {authLoading ? 'Criando conta...' : 'Criar Conta'}
             </Button>
           </form>
 
-          {/* Divisor */}
           <div className="my-6 flex items-center">
             <div className="flex-1 border-t border-border/50"></div>
             <span className="px-4 text-sm text-white/50">ou</span>
             <div className="flex-1 border-t border-border/50"></div>
           </div>
 
-          {/* Link para Login */}
           <div className="text-center">
             <p className="text-white/70">
               Já tem uma conta?{' '}
@@ -217,7 +201,6 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Demo Info */}
         <div className="mt-6 text-center">
           <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
             <p className="text-sm text-primary font-medium mb-2">💡 Demo</p>
@@ -232,4 +215,3 @@ const Register = () => {
 };
 
 export default Register;
-

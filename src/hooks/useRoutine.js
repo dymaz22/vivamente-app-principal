@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { useAuth } from './useAuth'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 // Hook principal para a funcionalidade de Rotina
 export const useRoutine = () => {
