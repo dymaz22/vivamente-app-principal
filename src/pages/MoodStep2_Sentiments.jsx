@@ -4,12 +4,16 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { useRoutine } from '../hooks/useRoutine';
+import { useRoutine } from '../hooks/useRoutine.js'; // Caminho corrigido para .jsx
 
 const MoodStep2_Sentiments = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sentiments, loading } = useSentiments();
+  
+  // CORRIGIDO: Usamos o useRoutine para pegar a lista de sentimentos
+  // A sintaxe "sentimentsList: sentiments" renomeia a variável para o que o resto do componente espera
+  const { sentimentsList: sentiments } = useRoutine(); 
+  
   const [selectedSentiments, setSelectedSentiments] = useState([]);
   
   const moodLevel = location.state?.moodLevel;
@@ -38,18 +42,7 @@ const MoodStep2_Sentiments = () => {
     navigate('/rotina/humor/nivel');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] p-4">
-        <div className="container mx-auto max-w-md">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-white/70 mt-4">Carregando sentimentos...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // REMOVEMOS A TELA DE LOADING, pois os dados agora são instantâneos.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] p-4">
@@ -80,7 +73,7 @@ const MoodStep2_Sentiments = () => {
           <Card className="bg-card/30 backdrop-blur-sm border-border/50 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${moodLevel.color}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl`}>
                   {moodLevel.emoji}
                 </div>
                 <div>
@@ -99,7 +92,7 @@ const MoodStep2_Sentiments = () => {
               Quais sentimentos você está experimentando?
             </CardTitle>
             <CardDescription className="text-white/70">
-              Selecione todos que se aplicam. Você pode escolher quantos quiser.
+              Selecione todos que se aplicam.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,6 +161,4 @@ const MoodStep2_Sentiments = () => {
     </div>
   );
 };
-
 export default MoodStep2_Sentiments;
-
