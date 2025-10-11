@@ -8,7 +8,7 @@ const MoodSuccess = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/rotina');
+      navigate('/rotina', { state: { fromSuccess: true } });
     }, 3000);
     return () => clearTimeout(timer);
   }, [navigate]);

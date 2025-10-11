@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-// LISTA FIXA DE SENTIMENTOS - A PARTIR DE AGORA, USAMOS ISSO
+// LISTA FIXA DE SENTIMENTOS
 const MOCKED_SENTIMENTS = [
   { id: 1, name: 'Feliz', category: 'Positivo' }, { id: 2, name: 'Animado', category: 'Positivo' },
   { id: 3, name: 'Grato', category: 'Positivo' }, { id: 4, name: 'Relaxado', category: 'Positivo' },
@@ -19,83 +19,97 @@ export const useRoutine = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // FUNÇÃO getDailyRoutine TOTALMENTE CORRIGIDA
   const getDailyRoutine = async () => {
-    if (!isAuthenticated || !user) return { success: false, error: 'Usuário não autenticado' }
+    if (!isAuthenticated || !user) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
     try {
-      setIsLoading(true)
-      setError(null)
-      const today = new Date().toISOString().split('T')[0]
-      const { data: existingRoutine } = await supabase.from('daily_routines').select('*').eq('user_id', user.id).eq('date', today).single()
+      setIsLoading(true);
+      setError(null);
+      const today = new Date().toISOString().split('T')[0];
 
-      if (existingRoutine) {
-        const structuredRoutine = {
-          ...existingRoutine,
+      // CORREÇÃO 406: Buscamos sem o .single()
+      let { data: existingRoutines, error: selectError } = await supabase
+        .from('daily_routines')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today);
+
+      if (selectError) throw selectError;
+
+      // Se a rotina já existe
+      if (existingRoutines && existingRoutines.length > 0) {
+        const routine = existingRoutines[0];
+        setDailyRoutine({
+          ...routine,
           completions: {
-            lesson: existingRoutine.is_lesson_completed || false,
-            quiz: existingRoutine.is_test_completed || false,
-            task: existingRoutine.is_tool_completed || false,
-            moodLog: existingRoutine.is_mood_logged || false
+            lesson: routine.is_lesson_completed || false,
+            quiz: routine.is_test_completed || false,
+            task: routine.is_tool_completed || false,
+            moodLog: routine.is_mood_logged || false
           }
-        }
-        setDailyRoutine(structuredRoutine)
-        return { success: true, data: structuredRoutine }
+        });
+        return { success: true, data: routine };
       }
 
-      const { data: lessons } = await supabase.from('lessons').select('*').limit(1)
-      const { data: quizzes } = await supabase.from('quizzes').select('*').limit(1)
-      const { data: tasks } = await supabase.from('user_tasks').select('*').limit(1)
+      // Se não existe, criamos uma nova
+      const { data: lessons } = await supabase.from('lessons').select('id').limit(1);
+      const { data: quizzes } = await supabase.from('quizzes').select('id').limit(1);
+      const { data: tasks } = await supabase.from('user_tasks').select('id').limit(1);
+
       const newRoutineData = {
-        user_id: user.id, date: today, suggested_lesson_id: lessons?.[0]?.id,
-        suggested_test_id: quizzes?.[0]?.id, suggested_tool_id: tasks?.[0]?.id,
-        is_lesson_completed: false, is_test_completed: false, is_tool_completed: false, is_mood_logged: false
-      }
-      const { data: insertedRoutine } = await supabase.from('daily_routines').insert([newRoutineData]).select().single()
+        user_id: user.id,
+        date: today,
+        suggested_lesson_id: lessons?.[0]?.id || null,
+        suggested_test_id: quizzes?.[0]?.id || null,
+        suggested_tool_id: tasks?.[0]?.id || null,
+        is_lesson_completed: false,
+        is_test_completed: false,
+        is_tool_completed: false,
+        is_mood_logged: false
+      };
+
+      // CORREÇÃO 400: Sintaxe correta para inserir e selecionar
+      const { data: insertedRoutine, error: insertError } = await supabase
+        .from('daily_routines')
+        .insert(newRoutineData)
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
       const newRoutine = {
-        ...(insertedRoutine || newRoutineData), lesson: lessons?.[0], quiz: quizzes?.[0],
-        task: tasks?.[0], completions: { lesson: false, quiz: false, task: false, moodLog: false }
-      }
-      setDailyRoutine(newRoutine)
-      return { success: true, data: newRoutine }
+        ...insertedRoutine,
+        completions: { lesson: false, quiz: false, task: false, moodLog: false }
+      };
+      setDailyRoutine(newRoutine);
+      return { success: true, data: newRoutine };
+
     } catch (err) {
-      setError(err.message)
-      return { success: false, error: err.message }
+      console.error('Erro detalhado no getDailyRoutine:', err);
+      setError('Não foi possível carregar sua rotina.');
+      return { success: false, error: err.message };
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
+  // Função addMoodLog (sem alterações, já estava correta)
   const addMoodLog = async (moodData) => {
     if (!isAuthenticated || !user) return { success: false, error: 'Usuário não autenticado' }
-
     try {
-      const moodLog = {
-        user_id: user.id,
-        mood_level: moodData.level,
-        mood: moodData.description, // Nome correto da coluna
-        context_notes: moodData.context?.notes || '',
-        context_location: moodData.context?.location || '',
-        context_company: moodData.context?.company || '',
-        context_activity: moodData.context?.activity || '',
-        created_at: new Date().toISOString()
-      }
-
+      const moodLog = { user_id: user.id, mood_level: moodData.level, mood: moodData.description, context_notes: moodData.context?.notes || '', context_location: moodData.context?.location || '', context_company: moodData.context?.company || '', context_activity: moodData.context?.activity || '', created_at: new Date().toISOString() }
       const { data, error } = await supabase.from('mood_logs').insert([moodLog]).select().single()
       if (error) throw error
-
       if (moodData.sentiments && moodData.sentiments.length > 0 && data?.id) {
-        const logSentiments = moodData.sentiments.map(sentimentId => ({
-          mood_log_id: data.id, sentiment_id: sentimentId
-        }))
+        const logSentiments = moodData.sentiments.map(sentimentId => ({ mood_log_id: data.id, sentiment_id: sentimentId }))
         await supabase.from('log_sentiments').insert(logSentiments)
       }
-
       if (dailyRoutine) {
         const today = new Date().toISOString().split('T')[0]
         await supabase.from('daily_routines').update({ is_mood_logged: true }).eq('user_id', user.id).eq('date', today)
-        setDailyRoutine(prev => ({
-          ...prev, is_mood_logged: true,
-          completions: { ...prev.completions, moodLog: true }
-        }))
+        setDailyRoutine(prev => ({ ...prev, is_mood_logged: true, completions: { ...prev.completions, moodLog: true } }))
       }
       return { success: true, data }
     } catch (err) {
@@ -104,6 +118,7 @@ export const useRoutine = () => {
     }
   }
 
+  // Função markTaskAsCompleted (sem alterações, já estava correta)
   const markTaskAsCompleted = async (taskType) => {
     if (!isAuthenticated || !user || !dailyRoutine) return { success: false }
     try {
@@ -117,6 +132,7 @@ export const useRoutine = () => {
     }
   }
 
+  // useEffect (sem alterações, já estava correto)
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       getDailyRoutine()
@@ -126,6 +142,7 @@ export const useRoutine = () => {
     }
   }, [isAuthenticated, user, authLoading])
 
+  // return (sem alterações, já estava correto)
   return {
     dailyRoutine,
     sentimentsList,
