@@ -28,11 +28,13 @@ import Rotina from './pages/Rotina.jsx';
 import MoodStep1_Level from './pages/MoodStep1_Level.jsx';
 import MoodStep2_Sentiments from './pages/MoodStep2_Sentiments.jsx';
 import MoodStep3_Context from './pages/MoodStep3_Context.jsx';
-import MoodSuccess from './pages/MoodSuccess.jsx'; // <-- IMPORTAÇÃO CORRETA
+import MoodSuccess from './pages/MoodSuccess.jsx';
 
 // Páginas placeholder (serão criadas)
 import Companheiro from './pages/Companheiro.jsx';
 import Perfil from './pages/Perfil.jsx';
+
+// A importação do TesteConexao foi removida
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
         {/* Rotas públicas (autenticação) */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* A rota /teste-conexao foi removida */}
         
         {/* Rotas protegidas com layout principal */}
         <Route path="/" element={
@@ -59,12 +63,11 @@ function App() {
           <Route path="teste/:id/responder" element={<TesteResponder />} />
           <Route path="teste/:id/resultado" element={<TesteResultado />} />
           
-          {/* Seção Rotina e Humor */}
           <Route path="rotina" element={<Rotina />} />
           <Route path="rotina/humor/nivel" element={<MoodStep1_Level />} />
           <Route path="rotina/humor/sentimentos" element={<MoodStep2_Sentiments />} />
           <Route path="rotina/humor/contexto" element={<MoodStep3_Context />} />
-          <Route path="rotina/humor/sucesso" element={<MoodSuccess />} /> {/* <-- ROTA ADICIONADA */}
+          <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
           
           <Route path="companheiro" element={<Companheiro />} />
           <Route path="perfil" element={<Perfil />} />

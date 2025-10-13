@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react'; // 'useEffect' foi removido daqui
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Heart, BookOpen, Brain, CheckCircle, Circle, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -7,7 +7,7 @@ import { Progress } from '../components/ui/progress';
 import { Badge } from '../components/ui/badge';
 import { useRoutine } from '../hooks/useRoutine.js';
 
-// Componente para item de tarefa diária (Estrutura Perfeita, sem alterações)
+// Componente para item de tarefa diária (sem alterações)
 const DailyTaskItem = ({ task, isCompleted, onToggleComplete, icon: Icon, type }) => {
     const navigate = useNavigate();
     const handleCardClick = () => { if (isCompleted) return; switch (type) { case 'lesson': if (task?.id) navigate(`/licao/${task.id}`); break; case 'quiz': if (task?.id) navigate(`/teste/${task.id}`); break; case 'task': navigate('/tarefas'); break; default: break; } };
@@ -21,7 +21,6 @@ const DailyTaskItem = ({ task, isCompleted, onToggleComplete, icon: Icon, type }
 
 const Rotina = () => {
   const navigate = useNavigate();
-  // Hook useRoutine já está correto, importando markTaskAsCompleted
   const { 
     dailyRoutine, 
     isLoading, 
@@ -31,12 +30,8 @@ const Rotina = () => {
     markTaskAsCompleted 
   } = useRoutine();
 
-  // Força a busca dos dados ao carregar a página
-  useEffect(() => {
-    if(!dailyRoutine) { // Otimização: busca apenas se não tiver dados
-      getDailyRoutine();
-    }
-  }, []);
+  // O BLOCO useEffect FOI REMOVIDO DAQUI PARA RESOLVER O PROBLEMA DE DADOS ANTIGOS.
+  // O hook useRoutine já gerencia o carregamento inicial dos dados.
 
   if (authLoading || (isLoading && !dailyRoutine)) {
     return (
@@ -59,7 +54,7 @@ const Rotina = () => {
   const progress = (completedTasks / totalTasks) * 100;
   const handleMoodLogPress = () => { if (dailyRoutine?.completions?.moodLog) return; navigate('/rotina/humor/nivel'); };
   
-  // Função para chamar o hook (sem alterações, já estava correta)
+  // Função para chamar o hook (sem alterações)
   const handleTaskComplete = (taskType) => { 
     if (dailyRoutine?.completions?.[taskType]) return; 
     markTaskAsCompleted(taskType); 
@@ -78,23 +73,18 @@ const Rotina = () => {
         </Card>
         <div className="space-y-4 mt-6">
           <h2 className="text-lg font-semibold text-white">Atividades do Dia</h2>
-          
-          {/* >>>>> NENHUMA MUDANÇA FUNCIONAL AQUI, SEU CÓDIGO JÁ ESTAVA CORRETO <<<<< */}
-          {/* A propriedade onToggleComplete já chama a função certa que chama o hook */}
           <DailyTaskItem 
             task={dailyRoutine?.lesson} 
             isCompleted={dailyRoutine?.completions?.lesson} 
             onToggleComplete={() => handleTaskComplete('lesson')} 
             icon={BookOpen} 
             type="lesson" />
-            
           <DailyTaskItem 
             task={dailyRoutine?.quiz} 
             isCompleted={dailyRoutine?.completions?.quiz} 
             onToggleComplete={() => handleTaskComplete('quiz')} 
             icon={Brain} 
             type="quiz" />
-            
           <DailyTaskItem 
             task={dailyRoutine?.task} 
             isCompleted={dailyRoutine?.completions?.task} 
