@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-// LISTA FIXA DE SENTIMENTOS
+// LISTA FIXA DE SENTIMENTOS (Não alterada)
 const MOCKED_SENTIMENTS = [
   { id: 1, name: 'Feliz', category: 'Positivo' }, { id: 2, name: 'Animado', category: 'Positivo' },
   { id: 3, name: 'Grato', category: 'Positivo' }, { id: 4, name: 'Relaxado', category: 'Positivo' },
@@ -19,7 +19,7 @@ export const useRoutine = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // FUNÇÃO getDailyRoutine TOTALMENTE CORRIGIDA
+  // FUNÇÃO getDailyRoutine (Não alterada)
   const getDailyRoutine = async () => {
     if (!isAuthenticated || !user) {
       return { success: false, error: 'Usuário não autenticado' };
@@ -29,7 +29,6 @@ export const useRoutine = () => {
       setError(null);
       const today = new Date().toISOString().split('T')[0];
 
-      // CORREÇÃO 406: Buscamos sem o .single()
       let { data: existingRoutines, error: selectError } = await supabase
         .from('daily_routines')
         .select('*')
@@ -38,7 +37,6 @@ export const useRoutine = () => {
 
       if (selectError) throw selectError;
 
-      // Se a rotina já existe
       if (existingRoutines && existingRoutines.length > 0) {
         const routine = existingRoutines[0];
         setDailyRoutine({
@@ -53,7 +51,6 @@ export const useRoutine = () => {
         return { success: true, data: routine };
       }
 
-      // Se não existe, criamos uma nova
       const { data: lessons } = await supabase.from('lessons').select('id').limit(1);
       const { data: quizzes } = await supabase.from('quizzes').select('id').limit(1);
       const { data: tasks } = await supabase.from('user_tasks').select('id').limit(1);
@@ -70,7 +67,6 @@ export const useRoutine = () => {
         is_mood_logged: false
       };
 
-      // CORREÇÃO 400: Sintaxe correta para inserir e selecionar
       const { data: insertedRoutine, error: insertError } = await supabase
         .from('daily_routines')
         .insert(newRoutineData)
@@ -95,7 +91,7 @@ export const useRoutine = () => {
     }
   }
 
-  // Função addMoodLog (sem alterações, já estava correta)
+  // Função addMoodLog (Não alterada)
   const addMoodLog = async (moodData) => {
     if (!isAuthenticated || !user) return { success: false, error: 'Usuário não autenticado' }
     try {
@@ -109,7 +105,8 @@ export const useRoutine = () => {
       if (dailyRoutine) {
         const today = new Date().toISOString().split('T')[0]
         await supabase.from('daily_routines').update({ is_mood_logged: true }).eq('user_id', user.id).eq('date', today)
-        setDailyRoutine(prev => ({ ...prev, is_mood_logged: true, completions: { ...prev.completions, moodLog: true } }))
+        // A atualização da tela será feita pelo getDailyRoutine() para consistência
+        await getDailyRoutine();
       }
       return { success: true, data }
     } catch (err) {
@@ -118,21 +115,50 @@ export const useRoutine = () => {
     }
   }
 
-  // Função markTaskAsCompleted (sem alterações, já estava correta)
+  // >>>>> FUNÇÃO markTaskAsCompleted TOTALMENTE CORRIGIDA <<<<<
   const markTaskAsCompleted = async (taskType) => {
-    if (!isAuthenticated || !user || !dailyRoutine) return { success: false }
+    if (!isAuthenticated || !user || !dailyRoutine?.id) {
+      console.error("Usuário ou rotina não disponíveis para atualização.");
+      return { success: false };
+    }
+
+    // Mapeia o tipo de tarefa para o nome da coluna no banco de dados
+    // Isso garante que estamos atualizando a coluna correta (ex: 'quiz' vira 'is_test_completed')
+    const columnMapping = {
+      lesson: 'is_lesson_completed',
+      quiz: 'is_test_completed', // Nome da sua coluna para testes/quizzes
+      task: 'is_tool_completed'   // Nome da sua coluna para ferramentas/tarefas
+    };
+
+    const columnToUpdate = columnMapping[taskType];
+
+    if (!columnToUpdate) {
+        console.error(`Tipo de tarefa inválido: ${taskType}`);
+        return { success: false, error: `Tipo de tarefa inválido` };
+    }
+
     try {
-      const updateField = `is_${taskType}_completed`
-      const today = new Date().toISOString().split('T')[0]
-      await supabase.from('daily_routines').update({ [updateField]: true }).eq('user_id', user.id).eq('date', today)
-      setDailyRoutine(prev => ({ ...prev, [updateField]: true, completions: { ...prev.completions, [taskType]: true }}))
-      return { success: true }
+      // Atualiza a coluna correta no Supabase usando o ID da rotina
+      const { error } = await supabase
+        .from('daily_routines')
+        .update({ [columnToUpdate]: true })
+        .eq('id', dailyRoutine.id);
+
+      if (error) throw error;
+
+      // PASSO CRUCIAL: Busca os dados novamente para garantir que a tela seja atualizada
+      console.log(`Tarefa '${taskType}' marcada com sucesso. Atualizando rotina...`);
+      await getDailyRoutine();
+
+      return { success: true };
+
     } catch (err) {
-      return { success: false, error: err.message }
+      console.error(`Erro ao marcar a tarefa '${taskType}' como concluída:`, err.message);
+      return { success: false, error: err.message };
     }
   }
 
-  // useEffect (sem alterações, já estava correto)
+  // useEffect (Não alterado)
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       getDailyRoutine()
@@ -142,7 +168,7 @@ export const useRoutine = () => {
     }
   }, [isAuthenticated, user, authLoading])
 
-  // return (sem alterações, já estava correto)
+  // return (Não alterado)
   return {
     dailyRoutine,
     sentimentsList,
