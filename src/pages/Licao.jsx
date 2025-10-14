@@ -26,10 +26,7 @@ const Licao = () => {
   }, [lessonDetails]);
 
   const handleComplete = async () => {
-    if (!user) {
-        console.error("Usuário não encontrado. Não é possível completar a lição.");
-        return;
-    }
+    if (!user) return;
     setIsCompleting(true);
     try {
       const result = await markLessonAsComplete(parseInt(id), user.id);
@@ -46,9 +43,10 @@ const Licao = () => {
   };
 
   const handleRating = async (newRating) => {
+    if (!user) return;
     setIsRating(true);
     try {
-      const result = await submitLessonRating(parseInt(id), newRating);
+      const result = await submitLessonRating(parseInt(id), newRating, user.id);
       if (result.success) {
         setRating(newRating);
         refetch();
@@ -62,14 +60,17 @@ const Licao = () => {
     }
   };
 
+  // >>>>> FUNÇÃO handleAddComment CORRIGIDA <<<<<
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !user) return; // Adicionada verificação de usuário
+    
     setIsCommenting(true);
     try {
-      const result = await submitLessonComment(parseInt(id), newComment);
+      // Passando o ID da lição, o ID do usuário e o conteúdo do comentário
+      const result = await submitLessonComment(parseInt(id), user.id, newComment);
       if (result.success) {
-        setNewComment('');
-        refetch();
+        setNewComment(''); // Limpa o campo de texto
+        refetch(); // Recarrega os dados para mostrar o novo comentário
       } else {
         console.error('Erro ao adicionar comentário:', result.error);
       }
@@ -109,7 +110,6 @@ const Licao = () => {
             <p className="text-white/60">Lição {lessonDetails.order || id}</p>
           </div>
         </div>
-
         {lessonDetails.video_url && (
           <div className="mb-8">
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
@@ -119,7 +119,6 @@ const Licao = () => {
             </div>
           </div>
         )}
-
         {lessonDetails.content_pt && (
           <div className="mb-8">
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
@@ -128,7 +127,6 @@ const Licao = () => {
             </div>
           </div>
         )}
-
         <div className="mb-8">
           <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
             <div className="flex items-center justify-between">
@@ -143,7 +141,6 @@ const Licao = () => {
             </div>
           </div>
         </div>
-
         <div className="mb-8">
           <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Avalie esta Lição</h3>
@@ -154,7 +151,6 @@ const Licao = () => {
             </div>
           </div>
         </div>
-
         <div className="mb-8">
           <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><MessageCircle className="w-5 h-5" />Comentários ({lessonDetails.comments?.length || 0})</h3>
@@ -164,9 +160,18 @@ const Licao = () => {
                 {isCommenting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enviando...</>) : (<><Send className="w-4 h-4 mr-2" />Enviar Comentário</>)}
               </Button>
             </div>
+            {/* O CÓDIGO A SEGUIR ESTÁ INCOMPLETO, VAMOS COMPLETÁ-LO NO PRÓXIMO PASSO */}
             <div className="space-y-4">
               {lessonDetails.comments && lessonDetails.comments.length > 0 ? (
-                lessonDetails.comments.map((comment) => (<div key={comment.id} className="border-b border-border/30 pb-4 last:border-b-0">...</div>))
+                lessonDetails.comments.map((comment) => (
+                  <div key={comment.id} className="border-b border-border/30 pb-4 last:border-b-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-white">{comment.user_id}</span>
+                      <span className="text-white/50 text-sm">{new Date(comment.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <p className="text-white/80">{comment.content}</p>
+                  </div>
+                ))
               ) : (<p className="text-white/60 text-center py-4">Nenhum comentário ainda. Seja o primeiro a comentar!</p>)}
             </div>
           </div>

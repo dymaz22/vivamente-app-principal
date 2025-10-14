@@ -109,7 +109,6 @@ export const useLessonDetails = (lessonId, language = 'pt') => {
   return { lessonDetails, loading, error, refetch: fetchLessonDetails };
 };
 
-// >>>>> FUNÇÃO markLessonAsComplete TOTALMENTE IMPLEMENTADA <<<<<
 export const markLessonAsComplete = async (lessonId, userId) => {
   if (!lessonId || !userId) {
     return { success: false, error: "ID do usuário ou da lição não fornecido." };
@@ -124,7 +123,7 @@ export const markLessonAsComplete = async (lessonId, userId) => {
         is_completed: true,
         completed_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id, lesson_id' // Informa ao Supabase como encontrar um registro existente
+        onConflict: 'user_id, lesson_id'
       });
 
     if (error) throw error;
@@ -136,6 +135,53 @@ export const markLessonAsComplete = async (lessonId, userId) => {
   }
 };
 
-// As funções abaixo continuam como MOCKS por enquanto
-export const submitLessonRating = async (lessonId, rating) => { /* ... mock ... */ };
-export const submitLessonComment = async (lessonId, content) => { /* ... mock ... */ };
+export const submitLessonRating = async (lessonId, rating, userId) => {
+  if (!lessonId || !userId || !rating) {
+    return { success: false, error: "Dados insuficientes para avaliar." };
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('user_progress')
+      .upsert({
+        user_id: userId,
+        lesson_id: lessonId,
+        rating: rating,
+      }, {
+        onConflict: 'user_id, lesson_id'
+      });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao avaliar lição:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// >>>>> FUNÇÃO submitLessonComment TOTALMENTE IMPLEMENTADA <<<<<
+export const submitLessonComment = async (lessonId, userId, content) => {
+  if (!lessonId || !userId || !content) {
+    return { success: false, error: "Dados insuficientes para comentar." };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('lesson_comments')
+      .insert({
+        lesson_id: lessonId,
+        user_id: userId,
+        content: content,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Erro ao adicionar comentário:', error);
+    return { success: false, error: error.message };
+  }
+};
