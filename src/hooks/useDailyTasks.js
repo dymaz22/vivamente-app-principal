@@ -17,19 +17,15 @@ export const useDailyTasks = () => {
     };
 
     const fetchTasksForToday = async () => {
-        if (!user) {
-            setLoading(false);
-            return;
-        }
+        if (!user) { setLoading(false); return; }
         setLoading(true);
         setError(null);
-        const todayDate = getTodayDateString();
         try {
             const { data, error } = await supabase
                 .from('user_tasks')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('due_date', todayDate)
+                .eq('due_date', getTodayDateString())
                 .order('created_at', { ascending: true }); 
             if (error) throw error;
             setTasks(data || []);
@@ -41,44 +37,65 @@ export const useDailyTasks = () => {
         }
     };
     
-    // --- CÓDIGO COM ATUALIZAÇÃO OTIMISTA ---
     const toggleTaskCompletion = async (taskId, currentStatus) => {
         if (!user) return;
-
-        // Guarda o estado original para o caso de falha
         const originalTasks = [...tasks];
-
-        // 1. ATUALIZA A TELA INSTANTANEAMENTE (Otimismo)
         const updatedTasks = tasks.map(task =>
             task.id === taskId ? { ...task, is_completed: !currentStatus } : task
         );
         setTasks(updatedTasks);
-
-        // 2. SINCRONIZA COM O BANCO DE DADOS EM SEGUNDO PLANO
         try {
             const { error } = await supabase
                 .from('user_tasks')
                 .update({ is_completed: !currentStatus })
                 .eq('id', taskId)
                 .eq('user_id', user.id);
+            if (error) { setTasks(originalTasks); }
+        } catch (err) { setTasks(originalTasks); }
+    };
 
-            // 3. SE OCORRER UM ERRO, REVERTE A MUDANÇA NA TELA
-            if (error) {
-                console.error('Falha na sincronização, revertendo:', error.message);
-                setTasks(originalTasks); // Volta ao estado original
-            }
+    // --- FUNÇÃO DE ADICIONAR SIMPLIFICADA ---
+    const addTask = async (taskText) => {
+        if (!user || !taskText.trim()) return { success: false, error: 'Texto inválido' };
+        try {
+            const { data, error } = await supabase
+                .from('user_tasks')
+                .insert({ user_id: user.id, text: taskText.trim(), due_date: getTodayDateString() })
+                .select()
+                .single();
+            if (error) throw error;
+            return { success: true, task: data };
         } catch (err) {
-            console.error('Erro ao atualizar tarefa:', err.message);
-            setTasks(originalTasks); // Garante que volte ao estado original
+            console.error('Erro ao adicionar tarefa:', err.message);
+            return { success: false, error: err };
         }
     };
-    // --- FIM DA ATUALIZAÇÃO ---
+
+    // --- NOVA FUNÇÃO DE DELETAR ---
+    const deleteTask = async (taskId) => {
+        if (!user) return;
+        const originalTasks = [...tasks];
+        // Atualização otimista: remove da tela imediatamente
+        setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+        try {
+            const { error } = await supabase
+                .from('user_tasks')
+                .delete()
+                .eq('id', taskId)
+                .eq('user_id', user.id);
+            if (error) {
+                console.error('Falha ao deletar, revertendo:', error.message);
+                setTasks(originalTasks); // Reverte se der erro
+            }
+        } catch (err) {
+            console.error('Erro ao deletar tarefa:', err.message);
+            setTasks(originalTasks);
+        }
+    };
 
     useEffect(() => {
-        if (user) {
-            fetchTasksForToday();
-        }
+        if (user) { fetchTasksForToday(); }
     }, [user]);
 
-    return { tasks, loading, error, fetchTasksForToday, toggleTaskCompletion };
+    return { tasks, loading, error, toggleTaskCompletion, addTask, deleteTask };
 };
