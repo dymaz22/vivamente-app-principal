@@ -1,29 +1,16 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading } = useAuth();
   
-  // Mostrar loading enquanto verifica autenticação
+  // Se ainda estiver carregando, não mostre nada
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-white/70">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return null; // A tela de loading será controlada pelo App.jsx
   }
   
-  // Se não estiver autenticado, redirecionar para login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Se estiver autenticado, renderizar o componente filho
-  return children;
+  // Se estiver autenticado, mostre o conteúdo. Caso contrário, não mostre nada.
+  return isAuthenticated ? children : null;
 };
 
 export default ProtectedRoute;

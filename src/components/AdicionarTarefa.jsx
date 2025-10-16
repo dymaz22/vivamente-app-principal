@@ -4,9 +4,10 @@ import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import PetalsAnimation from '../components/PetalsAnimation';
-// 1. IMPORTANDO A NOVA API E O HOOK DE AUTENTICAÇÃO
-import { addTaskApi } from '../lib/tasksApi'; 
+// A importação do useDailyTasks foi removida pois não é mais necessária aqui
+// import { useDailyTasks } from '../hooks/useDailyTasks';
 import { useAuth } from '../hooks/useAuth.jsx';
+import { addTaskApi } from '../lib/tasksApi';
 import toolsTemplatesData from '../data/tools-templates.json';
 
 const getIconComponent = (iconName) => {
@@ -16,7 +17,7 @@ const getIconComponent = (iconName) => {
 
 const AdicionarTarefa = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // 2. Precisamos do usuário para saber quem está criando a tarefa
+  const { user } = useAuth();
   
   const [isAdding, setIsAdding] = useState(false);
   const [customTaskText, setCustomTaskText] = useState('');
@@ -30,16 +31,17 @@ const AdicionarTarefa = () => {
   }, {});
   const categorias = Object.keys(templatesPorCategoria);
 
-  // 3. FUNÇÃO SIMPLIFICADA E CORRIGIDA
   const handleAddTask = async (taskText) => {
     if (isAdding || !taskText.trim() || !user) return;
     setIsAdding(true);
     
-    // Chama a API diretamente, sem usar o hook de tarefas
+    // Usando a API diretamente
     const result = await addTaskApi(taskText, user.id);
     
     if (result.success) {
-      navigate('/ferramentas');
+      // --- CORREÇÃO DO REDIRECIONAMENTO ---
+      // Navega para a rota correta: /tarefas
+      navigate('/tarefas', { state: { taskJustAdded: true } });
     } else {
       console.error("Falha ao adicionar a tarefa.");
       setIsAdding(false);
@@ -47,14 +49,17 @@ const AdicionarTarefa = () => {
   };
 
   return (
-    // O JSX ABAIXO NÃO MUDA
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative">
       <PetalsAnimation />
       <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/ferramentas')} className="text-white hover:text-white/80"><ArrowLeft className="w-6 h-6" /></Button>
+          {/* O botão de voltar agora também usa a rota correta */}
+          <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/tarefas')} className="text-white hover:text-white/80"><ArrowLeft className="w-6 h-6" /></Button>
           <div><h1 className="text-2xl font-bold text-white">Adicionar Tarefa</h1><p className="text-white/70">Escolha um template ou crie uma tarefa personalizada</p></div>
         </div>
+        
+        {/* A ÁREA DE TESTE FOI REMOVIDA */}
+        
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="flex flex-wrap justify-start gap-2 h-auto bg-card/30 backdrop-blur-sm border border-border/50 mb-8 p-2">
             {categorias.map((categoria) => (<TabsTrigger key={categoria} value={categoria} className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{categoria}</TabsTrigger>))}

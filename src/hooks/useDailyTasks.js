@@ -54,17 +54,14 @@ export const useDailyTasks = () => {
         } catch (err) { setTasks(originalTasks); }
     };
 
-    // --- FUNÇÃO DE ADICIONAR SIMPLIFICADA ---
     const addTask = async (taskText) => {
-        if (!user || !taskText.trim()) return { success: false, error: 'Texto inválido' };
+        if (!user || !taskText.trim()) return { success: false };
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('user_tasks')
-                .insert({ user_id: user.id, text: taskText.trim(), due_date: getTodayDateString() })
-                .select()
-                .single();
+                .insert({ user_id: user.id, text: taskText.trim(), due_date: getTodayDateString() });
             if (error) throw error;
-            return { success: true, task: data };
+            return { success: true };
         } catch (err) {
             console.error('Erro ao adicionar tarefa:', err.message);
             return { success: false, error: err };
@@ -75,7 +72,6 @@ export const useDailyTasks = () => {
     const deleteTask = async (taskId) => {
         if (!user) return;
         const originalTasks = [...tasks];
-        // Atualização otimista: remove da tela imediatamente
         setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
         try {
             const { error } = await supabase
@@ -85,7 +81,7 @@ export const useDailyTasks = () => {
                 .eq('user_id', user.id);
             if (error) {
                 console.error('Falha ao deletar, revertendo:', error.message);
-                setTasks(originalTasks); // Reverte se der erro
+                setTasks(originalTasks);
             }
         } catch (err) {
             console.error('Erro ao deletar tarefa:', err.message);
@@ -97,5 +93,6 @@ export const useDailyTasks = () => {
         if (user) { fetchTasksForToday(); }
     }, [user]);
 
-    return { tasks, loading, error, toggleTaskCompletion, addTask, deleteTask };
+    // Exportando a função de recarregar
+    return { tasks, loading, error, toggleTaskCompletion, addTask, deleteTask, refetchTasks: fetchTasksForToday };
 };
