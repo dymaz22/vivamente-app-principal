@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
-// Importe o seu hook de autenticação
 import { useAuth } from './hooks/useAuth.jsx';
 
 // Componentes
@@ -10,7 +9,6 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AprenderHome from './pages/AprenderHome.jsx';
-// ... (mantenha todas as suas outras importações de página aqui)
 import ProgramaDetalhes from './pages/ProgramaDetalhes.jsx';
 import CursoDetalhes from './pages/CursoDetalhes.jsx';
 import Licao from './pages/Licao.jsx';
@@ -26,10 +24,11 @@ import MoodStep3_Context from './pages/MoodStep3_Context.jsx';
 import MoodSuccess from './pages/MoodSuccess.jsx';
 import Companheiro from './pages/Companheiro.jsx';
 import Perfil from './pages/Perfil.jsx';
+// 1. IMPORTANDO A NOVA PÁGINA
+import Definicoes from './pages/Definicoes.jsx';
 
-// Tela de Loading genérica
 const LoadingScreen = () => (
-  <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
   </div>
 );
@@ -37,16 +36,13 @@ const LoadingScreen = () => (
 function AppContent() {
   const { isAuthenticated, authLoading } = useAuth();
 
-  // 1. Mostra a tela de Loading enquanto a autenticação é verificada
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // 2. Após o loading, decide qual conjunto de rotas renderizar
   return (
     <Routes>
       {isAuthenticated ? (
-        // --- ROTAS PROTEGIDAS ---
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Navigate to="/aprender" replace />} />
           <Route path="aprender" element={<AprenderHome />} />
@@ -65,15 +61,16 @@ function AppContent() {
           <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
           <Route path="companheiro" element={<Companheiro />} />
           <Route path="perfil" element={<Perfil />} />
-          {/* Rota de fallback para qualquer outra URL quando logado */}
+          
+          {/* 2. ADICIONANDO A NOVA ROTA */}
+          <Route path="definicoes" element={<Definicoes />} />
+          
           <Route path="*" element={<Navigate to="/aprender" replace />} />
         </Route>
       ) : (
-        // --- ROTAS PÚBLICAS ---
         <>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* Rota de fallback para qualquer outra URL quando deslogado */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       )}
