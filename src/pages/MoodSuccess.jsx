@@ -2,16 +2,25 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
+// 1. IMPORTANDO O CÉREBRO DA ROTINA
+import { useDailyRoutine } from '../hooks/useDailyRoutine';
 
 const MoodSuccess = () => {
   const navigate = useNavigate();
+  // 2. PEGANDO A FUNÇÃO PARA COMPLETAR A ATIVIDADE
+  const { completeActivity } = useDailyRoutine();
 
   useEffect(() => {
+    // 3. MARCANDO A ATIVIDADE 'moodLog' COMO CONCLUÍDA
+    completeActivity('moodLog');
+
+    // O resto do código continua como estava
     const timer = setTimeout(() => {
-      navigate('/rotina', { state: { fromSuccess: true } });
+      navigate('/rotina');
     }, 3000);
+    
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, completeActivity]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] flex flex-col justify-center items-center p-4 text-center">
