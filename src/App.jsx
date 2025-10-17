@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 
 import { useAuth } from './hooks/useAuth.jsx';
-
-// Componentes
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import MainLayout from './components/MainLayout.jsx';
@@ -24,8 +22,9 @@ import MoodStep3_Context from './pages/MoodStep3_Context.jsx';
 import MoodSuccess from './pages/MoodSuccess.jsx';
 import Companheiro from './pages/Companheiro.jsx';
 import Perfil from './pages/Perfil.jsx';
-// 1. IMPORTANDO A NOVA PÁGINA
 import Definicoes from './pages/Definicoes.jsx';
+import EditarNome from './pages/EditarNome.jsx';
+import AlterarSenha from './pages/AlterarSenha.jsx';
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
@@ -33,6 +32,7 @@ const LoadingScreen = () => (
   </div>
 );
 
+// Este componente separado garante que o useAuth seja chamado dentro do Router
 function AppContent() {
   const { isAuthenticated, authLoading } = useAuth();
 
@@ -43,6 +43,7 @@ function AppContent() {
   return (
     <Routes>
       {isAuthenticated ? (
+        // --- ROTAS PROTEGIDAS ---
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Navigate to="/aprender" replace />} />
           <Route path="aprender" element={<AprenderHome />} />
@@ -61,13 +62,13 @@ function AppContent() {
           <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
           <Route path="companheiro" element={<Companheiro />} />
           <Route path="perfil" element={<Perfil />} />
-          
-          {/* 2. ADICIONANDO A NOVA ROTA */}
           <Route path="definicoes" element={<Definicoes />} />
-          
+          <Route path="definicoes/nome" element={<EditarNome />} />
+          <Route path="definicoes/senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/aprender" replace />} />
         </Route>
       ) : (
+        // --- ROTAS PÚBLICAS ---
         <>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
