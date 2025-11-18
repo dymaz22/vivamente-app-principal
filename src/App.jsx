@@ -25,6 +25,7 @@ import Perfil from './pages/Perfil.jsx';
 import Definicoes from './pages/Definicoes.jsx';
 import EditarNome from './pages/EditarNome.jsx';
 import AlterarSenha from './pages/AlterarSenha.jsx';
+import AnaliseHumor from './pages/AnaliseHumor.jsx'; // 1. IMPORT ADICIONADO
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
@@ -62,6 +63,7 @@ function AppContent() {
           <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
           <Route path="companheiro" element={<Companheiro />} />
           <Route path="perfil" element={<Perfil />} />
+          <Route path="analise-humor" element={<AnaliseHumor />} /> {/* 2. ROTA ADICIONADA */}
           <Route path="definicoes" element={<Definicoes />} />
           <Route path="definicoes/nome" element={<EditarNome />} />
           <Route path="definicoes/senha" element={<AlterarSenha />} />

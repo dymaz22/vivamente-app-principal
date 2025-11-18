@@ -33,13 +33,12 @@ const MoodStep3_Context = () => {
     setIsSubmitting(true);
   
     try {
-      // 1. CORRIGINDO OS NOMES DAS COLUNAS
       const { data: moodLog, error: moodLogError } = await supabase
         .from('mood_logs')
         .insert({
           user_id: user.id,
           mood_level: moodLevel.id,
-          mood: moodLevel.label, // Adicionando a label do humor
+          mood: moodLevel.label,
           context_notes: notes,
           context_location: selectedLocation,
           context_company: selectedSocialContext,
@@ -52,7 +51,7 @@ const MoodStep3_Context = () => {
       const sentimentIds = selectedSentiments.map(s => s.id);
       if (sentimentIds.length > 0) {
         const logSentimentsData = sentimentIds.map(sentimentId => ({
-          mood_log_id: moodLog.id,
+          log_id: moodLog.id, // CORREÇÃO: 'mood_log_id' para 'log_id'
           sentiment_id: sentimentId,
         }));
         const { error: logSentimentsError } = await supabase.from('log_sentiments').insert(logSentimentsData);
@@ -71,7 +70,6 @@ const MoodStep3_Context = () => {
   const handleBack = () => { navigate('/rotina/humor/sentimentos', { state: { moodLevel } }); };
 
   return (
-    // 2. RESTAURANDO O LAYOUT BONITO ORIGINAL
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] p-4 pb-24">
       <div className="container mx-auto max-w-md">
         <div className="flex items-center gap-4 mb-8">
