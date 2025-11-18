@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
+import { format } from 'date-fns'; // Importa a função de formatação de data
 
 export const useMoodStats = () => {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ export const useMoodStats = () => {
     mostCommonSentiments: [],
     avgEnergyLevel: 0,
   });
+  const [chartData, setChartData] = useState([]); // NOVO: Estado para os dados do gráfico
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,13 +24,21 @@ export const useMoodStats = () => {
     setError(null);
 
     try {
-      // 1. Buscar todos os mood_logs do usuário
+      // 1. Buscar todos os mood_logs do usuário, incluindo a data de criação
       const { data: moodLogs, error: logsError } = await supabase
         .from('mood_logs')
-        .select('id, mood_level')
-        .eq('user_id', user.id);
+        .select('id, mood_level, created_at') // Adicionado 'created_at'
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true }); // Ordena por data
 
       if (logsError) throw logsError;
+
+      // NOVO: Formata os dados para o gráfico
+      const formattedChartData = moodLogs.map(log => ({
+        date: format(new Date(log.created_at), 'dd/MM'), // Formata a data para 'dia/mês'
+        Nível: log.mood_level, // 'Nível' será o nome da linha no gráfico
+      }));
+      setChartData(formattedChartData);
 
       const totalLogs = moodLogs.length;
       if (totalLogs === 0) {
@@ -41,18 +51,18 @@ export const useMoodStats = () => {
       const totalEnergy = moodLogs.reduce((acc, log) => acc + log.mood_level, 0);
       const avgEnergyLevel = totalLogs > 0 ? (totalEnergy / totalLogs).toFixed(1) : 0;
 
-      // 3. Buscar os NOMES dos sentimentos através da tabela de ligação
+      // 3. Buscar os NOMES dos sentimentos
       const logIds = moodLogs.map(log => log.id);
       const { data: sentimentsData, error: sentimentsError } = await supabase
         .from('log_sentiments')
-        .select('sentiments ( name )') // CORREÇÃO: Busca o 'name' da tabela 'sentiments'
+        .select('sentiments ( name )')
         .in('log_id', logIds);
 
       if (sentimentsError) throw sentimentsError;
 
-      // 4. Calcular os sentimentos mais comuns a partir da nova estrutura de dados
+      // 4. Calcular os sentimentos mais comuns
       const sentimentCounts = sentimentsData.reduce((acc, item) => {
-        const sentimentName = item.sentiments.name; // CORREÇÃO: Acessa o nome do sentimento
+        const sentimentName = item.sentiments.name;
         acc[sentimentName] = (acc[sentimentName] || 0) + 1;
         return acc;
       }, {});
@@ -80,5 +90,6 @@ export const useMoodStats = () => {
     fetchMoodStats();
   }, [fetchMoodStats]);
 
-  return { stats, loading, error, refreshStats: fetchMoodStats };
+  // Retorna os dados do gráfico junto com as outras estatísticas
+  return { stats, chartData, loading, error, refreshStats: fetchMoodStats };
 };

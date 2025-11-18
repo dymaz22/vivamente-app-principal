@@ -1,27 +1,13 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMoodStats } from '../hooks/useMoodStats';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import MoodChart from '../components/MoodChart'; // 1. IMPORTA O GRÁFICO
 
 const AnaliseHumor = () => {
   const navigate = useNavigate();
-  const { stats, loading, error } = useMoodStats();
-
-  const StatCard = ({ title, value, unit = '' }) => (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-gray-400">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-white">
-          {value}
-          <span className="text-xs text-gray-400 ml-1">{unit}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  // 2. OBTÉM OS DADOS DO GRÁFICO DO HOOK
+  const { stats, chartData, loading, error } = useMoodStats();
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col p-4">
@@ -33,23 +19,22 @@ const AnaliseHumor = () => {
       </header>
 
       <main className="flex-grow">
-        {loading && <p className="text-center">Carregando estatísticas...</p>}
+        {loading && (
+          <div className="flex justify-center items-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
         {error && <p className="text-center text-red-500">Ocorreu um erro ao buscar os dados.</p>}
         
         {!loading && !error && (
-          <div className="space-y-4">
-            <StatCard 
-              title="Total de Registros" 
-              value={stats.totalLogs} 
-            />
-            <StatCard 
-              title="Nível de Energia Médio" 
-              value={stats.avgEnergyLevel} 
-              unit="/ 10"
-            />
+          <div className="space-y-6">
+            {/* 3. RENDERIZA O GRÁFICO */}
+            <MoodChart data={chartData} />
+
+            {/* Mantém o card de sentimentos frequentes */}
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-400">
+                <CardTitle className="text-base font-semibold text-white">
                   Sentimentos Mais Frequentes
                 </CardTitle>
               </CardHeader>
