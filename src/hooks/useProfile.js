@@ -29,10 +29,10 @@ export const useProfile = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState(null);
     const [streak, setStreak] = useState(0);
+    const [todayMoodLevel, setTodayMoodLevel] = useState(null); // 1. NOVO ESTADO
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // CORREÇÃO: A lógica de busca agora está envolvida em um useCallback
     const fetchProfileAndStats = useCallback(async () => {
         if (!user) {
             setLoading(false);
@@ -42,9 +42,15 @@ export const useProfile = () => {
         setLoading(true);
         setError(null);
         try {
-            const [profileResponse, moodLogsResponse] = await Promise.all([
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayISO = today.toISOString();
+
+            // 2. ADICIONA A BUSCA PELO HUMOR DE HOJE
+            const [profileResponse, moodLogsResponse, todayMoodResponse] = await Promise.all([
                 supabase.from('profiles').select('*').eq('id', user.id).single(),
-                supabase.from('mood_logs').select('created_at').eq('user_id', user.id)
+                supabase.from('mood_logs').select('created_at').eq('user_id', user.id),
+                supabase.from('mood_logs').select('mood_level').eq('user_id', user.id).gte('created_at', todayISO).order('created_at', { ascending: false }).limit(1).single()
             ]);
 
             const { data: profileData, error: profileError } = profileResponse;
@@ -53,19 +59,24 @@ export const useProfile = () => {
 
             const { data: moodLogs, error: logsError } = moodLogsResponse;
             if (logsError) throw logsError;
-            
             setStreak(calculateStreak(moodLogs));
+
+            // 3. ATUALIZA O ESTADO DO HUMOR DE HOJE
+            const { data: todayMoodData, error: todayMoodError } = todayMoodResponse;
+            if (todayMoodError && todayMoodError.code !== 'PGRST116') throw todayMoodError;
+            setTodayMoodLevel(todayMoodData ? todayMoodData.mood_level : null);
+
         } catch (err) {
             console.error("Erro ao buscar perfil ou stats:", err.message);
             setError("Não foi possível carregar os dados do perfil.");
         } finally {
             setLoading(false);
         }
-    }, [user]); // A função só será recriada se o 'user' mudar
+    }, [user]);
 
     useEffect(() => {
         fetchProfileAndStats();
-    }, [fetchProfileAndStats]); // O useEffect agora depende da função memorizada e estável
+    }, [fetchProfileAndStats]);
     
     const updateUsername = async (newUsername) => {
         if (!user || !newUsername.trim()) return { success: false, error: 'Nome de usuário inválido.' };
@@ -80,5 +91,5 @@ export const useProfile = () => {
         }
     };
 
-    return { profile, streak, loading, error, refetchProfile: fetchProfileAndStats, updateUsername };
+    return { profile, streak, todayMoodLevel, loading, error, refetchProfile: fetchProfileAndStats, updateUsername }; // 4. EXPORTA O NOVO ESTADO
 };
