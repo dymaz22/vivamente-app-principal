@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Settings, BarChart, Loader2, AlertCircle, Flame, ChevronRight, Smile, Frown, Meh } from 'lucide-react';
+import { User, Settings, BarChart, Loader2, AlertCircle, Flame, ChevronRight, Smile, Frown, Meh, MapPin } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 
@@ -48,7 +48,7 @@ const Perfil = () => {
   );
 
   const NavItem = ({ icon: Icon, title, subtitle, onClick }) => (
-    <button onClick={onClick} className="w-full p-4 flex items-center text-left hover:bg-gray-700/50 transition-colors">
+    <button onClick={onClick} className="w-full p-4 flex items-center text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700 last:border-0">
       <Icon className="w-5 h-5 text-gray-400 mr-4" />
       <div className="flex-1">
         <p className="font-semibold text-white">{title}</p>
@@ -89,7 +89,6 @@ const Perfil = () => {
             colorClass="text-orange-400"
           />
           
-          {/* 3. NAVEGAÇÃO ATIVADA PARA A LINHA DO TEMPO */}
           <StatCard
             icon={moodDisplay.Icon}
             value={moodDisplay.value}
@@ -105,6 +104,13 @@ const Perfil = () => {
             title="Análise de Humor"
             subtitle="Veja seus padrões" 
             onClick={() => navigate('/analise-humor')}
+          />
+          {/* 3. NOVO ITEM DE MENU */}
+          <NavItem 
+            icon={MapPin}
+            title="Principais razões"
+            subtitle="Em casa, Falar comigo mesmo..." 
+            onClick={() => navigate('/reasons-stats')}
           />
         </div>
       </div>
