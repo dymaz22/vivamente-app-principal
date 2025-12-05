@@ -15,7 +15,6 @@ const getMoodDisplay = (level) => {
 const Perfil = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // 1. OBTÉM O NOVO ESTADO 'todayMoodLevel'
   const { profile, streak, todayMoodLevel, loading, error } = useProfile();
 
   if (loading) {
@@ -83,14 +82,15 @@ const Perfil = () => {
         </div>
 
         <div className="space-y-4 mb-6">
+          {/* 1. NAVEGAÇÃO CONFIGURADA PARA O CALENDÁRIO */}
           <StatCard
             icon={Flame}
             value={streak}
             label={streak === 1 ? "dia de série" : "dias de série"}
-            onClick={() => { /* Navegar para /streak-calendar no futuro */ }}
+            onClick={() => navigate('/streak-calendar')} 
             colorClass="text-orange-400"
           />
-          {/* 2. CARD DE HUMOR ATUALIZADO */}
+          
           <StatCard
             icon={moodDisplay.Icon}
             value={moodDisplay.value}
@@ -104,7 +104,7 @@ const Perfil = () => {
           <NavItem 
             icon={BarChart}
             title="Análise de Humor"
-            subtitle="Veja seus padrões" // Placeholder
+            subtitle="Veja seus padrões" 
             onClick={() => navigate('/analise-humor')}
           />
         </div>

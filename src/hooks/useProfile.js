@@ -29,7 +29,7 @@ export const useProfile = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState(null);
     const [streak, setStreak] = useState(0);
-    const [todayMoodLevel, setTodayMoodLevel] = useState(null); // 1. NOVO ESTADO
+    const [todayMoodLevel, setTodayMoodLevel] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -46,11 +46,11 @@ export const useProfile = () => {
             today.setHours(0, 0, 0, 0);
             const todayISO = today.toISOString();
 
-            // 2. ADICIONA A BUSCA PELO HUMOR DE HOJE
             const [profileResponse, moodLogsResponse, todayMoodResponse] = await Promise.all([
                 supabase.from('profiles').select('*').eq('id', user.id).single(),
                 supabase.from('mood_logs').select('created_at').eq('user_id', user.id),
-                supabase.from('mood_logs').select('mood_level').eq('user_id', user.id).gte('created_at', todayISO).order('created_at', { ascending: false }).limit(1).single()
+                // CORREÇÃO: .maybeSingle() não dá erro se não encontrar registro
+                supabase.from('mood_logs').select('mood_level').eq('user_id', user.id).gte('created_at', todayISO).order('created_at', { ascending: false }).limit(1).maybeSingle()
             ]);
 
             const { data: profileData, error: profileError } = profileResponse;
@@ -61,9 +61,8 @@ export const useProfile = () => {
             if (logsError) throw logsError;
             setStreak(calculateStreak(moodLogs));
 
-            // 3. ATUALIZA O ESTADO DO HUMOR DE HOJE
             const { data: todayMoodData, error: todayMoodError } = todayMoodResponse;
-            if (todayMoodError && todayMoodError.code !== 'PGRST116') throw todayMoodError;
+            if (todayMoodError) throw todayMoodError; // maybeSingle não retorna erro 406
             setTodayMoodLevel(todayMoodData ? todayMoodData.mood_level : null);
 
         } catch (err) {
@@ -91,5 +90,5 @@ export const useProfile = () => {
         }
     };
 
-    return { profile, streak, todayMoodLevel, loading, error, refetchProfile: fetchProfileAndStats, updateUsername }; // 4. EXPORTA O NOVO ESTADO
+    return { profile, streak, todayMoodLevel, loading, error, refetchProfile: fetchProfileAndStats, updateUsername };
 };
