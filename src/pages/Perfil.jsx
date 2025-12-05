@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Settings, BarChart, Loader2, AlertCircle, Flame, ChevronRight, Smile, Frown, Meh, MapPin } from 'lucide-react';
+import { User, Settings, BarChart, Loader2, AlertCircle, Flame, ChevronRight, Smile, Frown, Meh, MapPin, Heart } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 
@@ -106,6 +106,12 @@ const Perfil = () => {
             onClick={() => navigate('/analise-humor')}
           />
           {/* 3. NOVO ITEM DE MENU */}
+          <NavItem 
+            icon={Heart}
+            title="Sentimentos mais frequentes"
+            subtitle="Ansioso, Deprimido..." 
+            onClick={() => navigate('/sentiments-stats')}
+          />
           <NavItem 
             icon={MapPin}
             title="Principais razões"

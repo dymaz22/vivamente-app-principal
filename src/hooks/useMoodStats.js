@@ -7,11 +7,12 @@ export const useMoodStats = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
     totalLogs: 0,
-    mostCommonSentiments: [],
+    mostCommonSentiments: [], // Mantido para compatibilidade
+    allSentiments: [], // NOVO: Lista completa com contagem
     avgEnergyLevel: 0,
-    topLocations: [], // Novo
-    topCompanies: [], // Novo
-    topActivities: [], // Novo
+    topLocations: [],
+    topCompanies: [],
+    topActivities: [],
   });
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ export const useMoodStats = () => {
     setError(null);
 
     try {
-      // 1. Buscar logs com colunas de contexto adicionadas
+      // 1. Buscar logs com contexto
       const { data: moodLogs, error: logsError } = await supabase
         .from('mood_logs')
         .select('id, mood_level, created_at, context_location, context_company, context_activity')
@@ -48,6 +49,7 @@ export const useMoodStats = () => {
         setStats({ 
             totalLogs: 0, 
             mostCommonSentiments: [], 
+            allSentiments: [],
             avgEnergyLevel: 0,
             topLocations: [],
             topCompanies: [],
@@ -61,7 +63,7 @@ export const useMoodStats = () => {
       const totalEnergy = moodLogs.reduce((acc, log) => acc + log.mood_level, 0);
       const avgEnergyLevel = totalLogs > 0 ? (totalEnergy / totalLogs).toFixed(1) : 0;
 
-      // --- NOVA LÓGICA: Estatísticas de Contexto ---
+      // Estatísticas de Contexto
       const calculateContextStats = (logs, field) => {
         const counts = logs.reduce((acc, log) => {
             const value = log[field];
@@ -71,14 +73,13 @@ export const useMoodStats = () => {
             return acc;
         }, {});
         return Object.entries(counts)
-            .sort((a, b) => b[1] - a[1]) // Ordena do maior para o menor
+            .sort((a, b) => b[1] - a[1])
             .map(([name, count]) => ({ name, count }));
       };
 
       const topLocations = calculateContextStats(moodLogs, 'context_location');
       const topCompanies = calculateContextStats(moodLogs, 'context_company');
       const topActivities = calculateContextStats(moodLogs, 'context_activity');
-      // ---------------------------------------------
 
       // Buscar sentimentos
       const logIds = moodLogs.map(log => log.id);
@@ -89,21 +90,25 @@ export const useMoodStats = () => {
 
       if (sentimentsError) throw sentimentsError;
 
-      // Calcular sentimentos mais comuns
+      // Calcular sentimentos (Lógica Atualizada)
       const sentimentCounts = sentimentsData.reduce((acc, item) => {
         const sentimentName = item.sentiments.name;
         acc[sentimentName] = (acc[sentimentName] || 0) + 1;
         return acc;
       }, {});
 
-      const sortedSentiments = Object.entries(sentimentCounts)
+      // Lista completa ordenada
+      const allSentimentsSorted = Object.entries(sentimentCounts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(item => item[0]);
+        .map(([name, count]) => ({ name, count }));
+
+      // Top 3 apenas os nomes (para compatibilidade com AnaliseHumor.jsx)
+      const top3Names = allSentimentsSorted.slice(0, 3).map(item => item.name);
 
       setStats({
         totalLogs,
-        mostCommonSentiments: sortedSentiments,
+        mostCommonSentiments: top3Names,
+        allSentiments: allSentimentsSorted, // Nova propriedade
         avgEnergyLevel,
         topLocations,
         topCompanies,
