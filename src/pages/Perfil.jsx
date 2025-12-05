@@ -4,7 +4,6 @@ import { User, Settings, BarChart, Loader2, AlertCircle, Flame, ChevronRight, Sm
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 
-// Função auxiliar para determinar o ícone e a cor do humor
 const getMoodDisplay = (level) => {
   if (level === null || level === undefined) return { Icon: Meh, color: 'text-gray-400', value: 'N/A' };
   if (level > 7) return { Icon: Smile, color: 'text-green-400', value: level };
@@ -82,20 +81,20 @@ const Perfil = () => {
         </div>
 
         <div className="space-y-4 mb-6">
-          {/* 1. NAVEGAÇÃO CONFIGURADA PARA O CALENDÁRIO */}
           <StatCard
             icon={Flame}
             value={streak}
             label={streak === 1 ? "dia de série" : "dias de série"}
-            onClick={() => navigate('/streak-calendar')} 
+            onClick={() => navigate('/streak-calendar')}
             colorClass="text-orange-400"
           />
           
+          {/* 3. NAVEGAÇÃO ATIVADA PARA A LINHA DO TEMPO */}
           <StatCard
             icon={moodDisplay.Icon}
             value={moodDisplay.value}
             label="Humor de hoje"
-            onClick={() => { /* Navegar para /timeline-stats no futuro */ }}
+            onClick={() => navigate('/timeline-stats')}
             colorClass={moodDisplay.color}
           />
         </div>
