@@ -1,73 +1,124 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import PetalsAnimation from '../components/PetalsAnimation';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const { signIn, authLoading } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { success } = await signIn(formData.email, formData.password);
-    if (success) {
-      navigate('/aprender');
+    setError('');
+    setLoading(true);
+    try {
+      await signIn(email, password);
+    } catch (err) {
+      setError('Falha ao fazer login. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative flex items-center justify-center p-4">
-      <PetalsAnimation />
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Vivamente</h1>
-          <p className="text-white/70">Bem-vindo de volta!</p>
+    // FUNDO TELA CHEIA
+    <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center px-4 py-12">
+      
+      {/* Botão Voltar */}
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 text-gray-400 hover:text-white"
+      >
+        <ArrowLeft className="h-6 w-6" />
+      </button>
+
+      {/* CARD CENTRALIZADO */}
+      <div className="w-full max-w-md space-y-8">
+        
+        {/* Cabeçalho */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white">Vivamente</h2>
+          <p className="mt-2 text-gray-400">Bem-vindo de volta!</p>
         </div>
-        <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-white">Email</label>
+
+        {/* Formulário */}
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            
+            {/* Input Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="seu@email.com" className="pl-10 bg-input border-border text-white placeholder:text-white/50" required />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="seu@email.com"
+                />
               </div>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-white">Senha</label>
+
+            {/* Input Senha */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input id="password" name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleInputChange} placeholder="••••••••" className="pl-10 pr-10 bg-input border-border text-white placeholder:text-white/50" required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/80">
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={authLoading}>
-              {authLoading ? 'Entrando...' : 'Entrar'}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <p className="text-white/70">
+          </div>
+
+          {error && (
+            <div className="text-red-400 text-sm text-center bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-400">
               Não tem uma conta?{' '}
-              <Link to="/register" className="text-primary hover:text-primary/80 font-medium">
+              <Link to="/register" className="font-medium text-purple-400 hover:text-purple-300 transition-colors">
                 Crie uma agora
               </Link>
             </p>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

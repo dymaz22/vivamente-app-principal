@@ -1,217 +1,168 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import PetalsAnimation from '../components/PetalsAnimation';
-import { useAuth } from '../hooks/useAuth.jsx'; // CORRIGIDO
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
-const Register = () => {
-  const navigate = useNavigate();
-  const { signUp, authLoading } = useAuth(); // CORRIGIDO
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+export default function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // O 'isLoading' foi removido pois agora usamos 'authLoading' do useAuth
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // FUNÇÃO handleSubmit COMPLETAMENTE SUBSTITUÍDA
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('As senhas não coincidem');
-      return;
+    setError('');
+
+    if (password !== confirmPassword) {
+      return setError('As senhas não coincidem');
     }
 
-    // Usando nossa nova função signUp do useAuth
-    const { success } = await signUp(formData.email, formData.password);
+    if (password.length < 6) {
+      return setError('A senha deve ter pelo menos 6 caracteres');
+    }
 
-    // Se o cadastro funcionou, o hook useAuth vai atualizar o estado
-    // e o nosso app vai redirecionar automaticamente.
-    // O 'navigate' aqui é uma segurança extra.
-    if (success) {
-      console.log('Navegando para /aprender após sucesso no registro.');
-      navigate('/aprender');
+    setLoading(true);
+    try {
+      await signUp(email, password, name);
+      // O redirecionamento acontece automaticamente pelo AuthProvider
+    } catch (err) {
+      setError('Erro ao criar conta. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative flex items-center justify-center p-4">
-      <PetalsAnimation />
+    // FUNDO TELA CHEIA
+    <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center px-4 py-12">
       
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Vivamente</h1>
-          <p className="text-white/70">Crie sua conta</p>
+      {/* Botão Voltar */}
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 text-gray-400 hover:text-white"
+      >
+        <ArrowLeft className="h-6 w-6" />
+      </button>
+
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white">Criar Conta</h2>
+          <p className="mt-2 text-gray-400">Comece sua jornada hoje</p>
         </div>
 
-        <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Nome Completo */}
-            <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-white">
-                Nome Completo
-              </label>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            
+            {/* Nome */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Nome Completo</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input
-                  id="fullName"
-                  name="fullName"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
                   type="text"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  placeholder="Seu nome completo"
-                  className="pl-10 bg-input border-border text-white placeholder:text-white/50"
                   required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="Seu nome"
                 />
               </div>
             </div>
 
-            {/* Campo Email */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-white">
-                Email
-              </label>
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input
-                  id="email"
-                  name="email"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
                   type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="seu@email.com"
-                  className="pl-10 bg-input border-border text-white placeholder:text-white/50"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="seu@email.com"
                 />
               </div>
             </div>
 
-            {/* Campos de Senha (sem alterações) ... */}
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-white">
-                Senha
-              </label>
+            {/* Senha */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input
-                  id="password"
-                  name="password"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
                   type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 bg-input border-border text-white placeholder:text-white/50"
                   required
-                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/80"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-white">
-                Confirmar Senha
-              </label>
+            {/* Confirmar Senha */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Confirmar Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 bg-input border-border text-white placeholder:text-white/50"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-500" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-700 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/80"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
               </div>
             </div>
-
-            <div className="flex items-start space-x-2">
-              <input
-                type="checkbox"
-                id="terms"
-                className="mt-1 custom-checkbox"
-                required
-              />
-              <label htmlFor="terms" className="text-sm text-white/70">
-                Concordo com os{' '}
-                <Link to="/terms" className="text-primary hover:text-primary/80">
-                  Termos de Uso
-                </Link>{' '}
-                e{' '}
-                <Link to="/privacy" className="text-primary hover:text-primary/80">
-                  Política de Privacidade
-                </Link>
-              </label>
-            </div>
-            
-            {/* BOTÃO CORRIGIDO */}
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={authLoading}
-            >
-              {authLoading ? 'Criando conta...' : 'Criar Conta'}
-            </Button>
-          </form>
-
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-border/50"></div>
-            <span className="px-4 text-sm text-white/50">ou</span>
-            <div className="flex-1 border-t border-border/50"></div>
           </div>
 
-          <div className="text-center">
-            <p className="text-white/70">
+          {error && (
+            <div className="text-red-400 text-sm text-center bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
+          >
+            {loading ? 'Criando conta...' : 'Criar Conta'}
+          </button>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-400">
               Já tem uma conta?{' '}
-              <Link 
-                to="/login" 
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
-              >
+              <Link to="/login" className="font-medium text-purple-400 hover:text-purple-300 transition-colors">
                 Fazer login
               </Link>
             </p>
           </div>
-        </div>
-
-        <div className="mt-6 text-center">
-          <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
-            <p className="text-sm text-primary font-medium mb-2">💡 Demo</p>
-            <p className="text-xs text-white/70">
-              Preencha os campos para criar uma conta de demonstração
-            </p>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 
 import { useAuth } from './hooks/useAuth.jsx';
+import Welcome from './pages/Welcome.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import MainLayout from './components/MainLayout.jsx';
@@ -29,7 +30,8 @@ import AnaliseHumor from './pages/AnaliseHumor.jsx';
 import StreakCalendar from './pages/StreakCalendar.jsx';
 import TimelineStats from './pages/TimelineStats.jsx';
 import ReasonsStats from './pages/ReasonsStats.jsx';
-import SentimentsStats from './pages/SentimentsStats.jsx'; // 1. IMPORT ADICIONADO
+import SentimentsStats from './pages/SentimentsStats.jsx';
+import LandingBackground from './components/auth/LandingBackground.jsx';
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
@@ -70,7 +72,7 @@ function AppContent() {
           <Route path="streak-calendar" element={<StreakCalendar />} />
           <Route path="timeline-stats" element={<TimelineStats />} />
           <Route path="reasons-stats" element={<ReasonsStats />} />
-          <Route path="sentiments-stats" element={<SentimentsStats />} /> {/* 2. ROTA ADICIONADA */}
+          <Route path="sentiments-stats" element={<SentimentsStats />} />
           <Route path="definicoes" element={<Definicoes />} />
           <Route path="definicoes/nome" element={<EditarNome />} />
           <Route path="definicoes/senha" element={<AlterarSenha />} />
@@ -79,9 +81,20 @@ function AppContent() {
       ) : (
         // --- ROTAS PÚBLICAS ---
         <>
+          {/* ROTA INICIAL: Tela de Boas-Vindas (COM VÍDEO) */}
+          <Route path="/" element={
+            <LandingBackground>
+              <Welcome />
+            </LandingBackground>
+          } />
+
+          {/* ROTA LOGIN: Direto ao componente (Ele cuida do fundo) */}
           <Route path="/login" element={<Login />} />
+
+          {/* ROTA CADASTRO: Direto ao componente (Ele cuida do fundo) */}
           <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
         </>
       )}
     </Routes>
