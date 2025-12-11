@@ -6,6 +6,8 @@ import { useAuth } from './hooks/useAuth.jsx';
 import Welcome from './pages/Welcome.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import Subscription from './pages/Subscription.jsx';
+import Quiz from './pages/Quiz.jsx';
 import MainLayout from './components/MainLayout.jsx';
 import AprenderHome from './pages/AprenderHome.jsx';
 import ProgramaDetalhes from './pages/ProgramaDetalhes.jsx';
@@ -32,6 +34,7 @@ import TimelineStats from './pages/TimelineStats.jsx';
 import ReasonsStats from './pages/ReasonsStats.jsx';
 import SentimentsStats from './pages/SentimentsStats.jsx';
 import LandingBackground from './components/auth/LandingBackground.jsx';
+import FlowGuard from './components/auth/FlowGuard.jsx'; // 1. IMPORT NOVO
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
@@ -49,8 +52,13 @@ function AppContent() {
   return (
     <Routes>
       {isAuthenticated ? (
-        // --- ROTAS PROTEGIDAS ---
-        <Route path="/" element={<MainLayout />}>
+        // --- ROTAS PROTEGIDAS (App Logado) ---
+        // Envolvemos tudo com o FlowGuard para garantir que ele pagou e fez o quiz
+        <Route path="/" element={
+          <FlowGuard>
+            <MainLayout />
+          </FlowGuard>
+        }>
           <Route index element={<Navigate to="/aprender" replace />} />
           <Route path="aprender" element={<AprenderHome />} />
           <Route path="programa/:id" element={<ProgramaDetalhes />} />
@@ -81,18 +89,31 @@ function AppContent() {
       ) : (
         // --- ROTAS PÚBLICAS ---
         <>
-          {/* ROTA INICIAL: Tela de Boas-Vindas (COM VÍDEO) */}
           <Route path="/" element={
             <LandingBackground>
               <Welcome />
             </LandingBackground>
           } />
 
-          {/* ROTA LOGIN: Direto ao componente (Ele cuida do fundo) */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={
+            <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center p-4">
+               <div className="w-full max-w-md">
+                 <Login />
+               </div>
+            </div>
+          } />
 
-          {/* ROTA CADASTRO: Direto ao componente (Ele cuida do fundo) */}
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={
+            <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center p-4">
+               <div className="w-full max-w-md">
+                  <Register />
+               </div>
+            </div>
+          } />
+
+          {/* Rotas de Onboarding (Acessíveis se logado, mas controladas pelo FlowGuard se tentar sair) */}
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/quiz" element={<Quiz />} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </>

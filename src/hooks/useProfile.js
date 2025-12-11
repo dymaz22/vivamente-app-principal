@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-// CORREÇÃO AQUI: O nome do arquivo é supabaseClient
 import { supabase } from '../lib/supabaseClient';
 
 export function useProfile(session) {
@@ -19,21 +18,27 @@ export function useProfile(session) {
     try {
       setLoading(true);
       
-      // Busca perfil com as novas colunas
+      // ALTERAÇÃO AQUI: Removi 'avatar_url' e 'username' para parar o erro
+      // Estamos buscando apenas o essencial para o fluxo funcionar
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, avatar_url, is_pro, onboarding_completed, ai_context')
+        .select('is_pro, onboarding_completed, ai_context')
         .eq('id', session.user.id)
         .single();
 
-      if (error) throw error;
-
-      setProfile(data);
-      setIsPro(data?.is_pro || false);
-      setOnboardingCompleted(data?.onboarding_completed || false);
+      // Se der erro, não vamos travar o app, vamos assumir valores padrão
+      if (error) {
+        console.warn('Perfil incompleto, usando padrões.', error);
+        setIsPro(false);
+        setOnboardingCompleted(false);
+      } else {
+        setProfile(data);
+        setIsPro(data?.is_pro || false);
+        setOnboardingCompleted(data?.onboarding_completed || false);
+      }
 
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('Erro fatal ao carregar perfil:', error);
     } finally {
       setLoading(false);
     }
