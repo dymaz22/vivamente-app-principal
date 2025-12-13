@@ -4,19 +4,27 @@ import { supabase } from '../lib/supabaseClient';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.error("Erro ao pegar sessão:", error);
+
+      const currentSession = data?.session ?? null;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
       setAuthLoading(false);
     };
+
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession ?? null);
+      setUser(newSession?.user ?? null);
+      setAuthLoading(false);
     });
 
     return () => subscription?.unsubscribe();
@@ -45,8 +53,9 @@ export const AuthProvider = ({ children }) => {
     }
     return { success: !error, error };
   };
-  
+
   const value = {
+    session,
     user,
     authLoading,
     isAuthenticated: !!user,
