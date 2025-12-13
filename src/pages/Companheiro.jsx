@@ -6,37 +6,60 @@ import { useAuth } from '../hooks/useAuth';
 
 const Companheiro = () => {
   const { user } = useAuth();
+
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // ✅ Fase 11: Contexto do usuário (ai_context) vindo do Supabase
+  const [aiContext, setAiContext] = useState(null);
+
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // 1. Carregar histórico do banco ao iniciar
+  // 1) Carregar histórico do chat + ai_context ao iniciar
   useEffect(() => {
-    const loadHistory = async () => {
+    const loadInitialData = async () => {
       if (!user) return;
-      
-      const { data, error } = await supabase
+
+      // A) Carregar histórico do chat
+      const { data: chatData, error: chatError } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (data) {
-        // Se não tiver mensagens, adiciona a saudação inicial localmente
-        if (data.length === 0) {
-            setMessages([{ id: 'intro', text: "Olá! Sou seu companheiro de jornada. Como você está se sentindo hoje?", sender: 'ai' }]);
+      if (chatError) console.error("Erro ao carregar histórico:", chatError);
+
+      if (chatData) {
+        if (chatData.length === 0) {
+          setMessages([
+            { id: 'intro', text: "Olá! Sou seu companheiro de jornada. Como você está se sentindo hoje?", sender: 'ai' }
+          ]);
         } else {
-            setMessages(data);
+          setMessages(chatData);
         }
+      }
+
+      // B) Carregar ai_context do perfil
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('ai_context')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Erro ao buscar ai_context:", profileError);
+      } else {
+        setAiContext(profileData?.ai_context ?? null);
+        console.log("🧠 IA Contextual carregada:", profileData?.ai_context ? "SIM" : "NÃO (vazio)");
       }
     };
 
-    loadHistory();
+    loadInitialData();
   }, [user]);
 
   useEffect(() => {
@@ -46,19 +69,20 @@ const Companheiro = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim() || isLoading) return;
+    if (!user) return;
 
     const userText = inputText;
     setInputText('');
     setIsLoading(true);
 
-    // 2. Salvar mensagem do usuário no banco
+    // 2) Salvar mensagem do usuário no banco
     const { error: userMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-            user_id: user.id,
-            text: userText,
-            sender: 'user'
-        });
+      .from('chat_messages')
+      .insert({
+        user_id: user.id,
+        text: userText,
+        sender: 'user'
+      });
 
     if (userMsgError) console.error("Erro ao salvar msg usuario:", userMsgError);
 
@@ -67,27 +91,29 @@ const Companheiro = () => {
     setMessages(newMessages);
 
     try {
-      // 3. Enviar para IA
-      const aiResponseText = await sendMessageToGemini(userText, newMessages);
-      
-      // 4. Salvar resposta da IA no banco
+      // 3) Enviar para IA com ai_context (Fase 11)
+      const aiResponseText = await sendMessageToGemini(userText, newMessages, aiContext);
+
+      // 4) Salvar resposta da IA no banco
       const { error: aiMsgError } = await supabase
         .from('chat_messages')
         .insert({
-            user_id: user.id,
-            text: aiResponseText,
-            sender: 'ai'
+          user_id: user.id,
+          text: aiResponseText,
+          sender: 'ai'
         });
-      
+
       if (aiMsgError) console.error("Erro ao salvar msg IA:", aiMsgError);
 
       // Atualiza UI
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        text: aiResponseText,
-        sender: 'ai'
-      }]);
-
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text: aiResponseText,
+          sender: 'ai'
+        }
+      ]);
     } catch (error) {
       console.error("Erro no chat:", error);
     } finally {
@@ -124,7 +150,7 @@ const Companheiro = () => {
             </div>
           </div>
         ))}
-        
+
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-800 p-3 rounded-2xl rounded-tl-none border border-gray-700 flex items-center gap-2">
