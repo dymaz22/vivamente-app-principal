@@ -34,7 +34,7 @@ import TimelineStats from './pages/TimelineStats.jsx';
 import ReasonsStats from './pages/ReasonsStats.jsx';
 import SentimentsStats from './pages/SentimentsStats.jsx';
 import LandingBackground from './components/auth/LandingBackground.jsx';
-import FlowGuard from './components/auth/FlowGuard.jsx'; // 1. IMPORT NOVO
+import FlowGuard from './components/auth/FlowGuard.jsx';
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
@@ -52,69 +52,68 @@ function AppContent() {
   return (
     <Routes>
       {isAuthenticated ? (
-        // --- ROTAS PROTEGIDAS (App Logado) ---
-        // Envolvemos tudo com o FlowGuard para garantir que ele pagou e fez o quiz
-        <Route path="/" element={
-          <FlowGuard>
-            <MainLayout />
-          </FlowGuard>
-        }>
-          <Route index element={<Navigate to="/aprender" replace />} />
-          <Route path="aprender" element={<AprenderHome />} />
-          <Route path="programa/:id" element={<ProgramaDetalhes />} />
-          <Route path="curso/:id" element={<CursoDetalhes />} />
-          <Route path="licao/:id" element={<Licao />} />
-          <Route path="tarefas" element={<Ferramentas />} />
-          <Route path="tarefas/nova" element={<AdicionarTarefa />} />
-          <Route path="teste/:id" element={<TesteIntroducao />} />
-          <Route path="teste/:id/responder" element={<TesteResponder />} />
-          <Route path="teste/:id/resultado" element={<TesteResultado />} />
-          <Route path="rotina" element={<Rotina />} />
-          <Route path="rotina/humor/nivel" element={<MoodStep1_Level />} />
-          <Route path="rotina/humor/sentimentos" element={<MoodStep2_Sentiments />} />
-          <Route path="rotina/humor/contexto" element={<MoodStep3_Context />} />
-          <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
-          <Route path="companheiro" element={<Companheiro />} />
-          <Route path="perfil" element={<Perfil />} />
-          <Route path="analise-humor" element={<AnaliseHumor />} />
-          <Route path="streak-calendar" element={<StreakCalendar />} />
-          <Route path="timeline-stats" element={<TimelineStats />} />
-          <Route path="reasons-stats" element={<ReasonsStats />} />
-          <Route path="sentiments-stats" element={<SentimentsStats />} />
-          <Route path="definicoes" element={<Definicoes />} />
-          <Route path="definicoes/nome" element={<EditarNome />} />
-          <Route path="definicoes/senha" element={<AlterarSenha />} />
-          <Route path="*" element={<Navigate to="/aprender" replace />} />
-        </Route>
+        // ============================================================
+        // ÁREA LOGADA
+        // ============================================================
+        <>
+          {/* IMPORTANTE: Estas rotas ficam FORA do FlowGuard para não dar loop */}
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/quiz" element={<Quiz />} />
+
+          {/* O FlowGuard protege APENAS o conteúdo principal */}
+          <Route path="/" element={
+            <FlowGuard>
+              <MainLayout />
+            </FlowGuard>
+          }>
+            <Route index element={<Navigate to="/aprender" replace />} />
+            <Route path="aprender" element={<AprenderHome />} />
+            <Route path="programa/:id" element={<ProgramaDetalhes />} />
+            <Route path="curso/:id" element={<CursoDetalhes />} />
+            <Route path="licao/:id" element={<Licao />} />
+            <Route path="tarefas" element={<Ferramentas />} />
+            <Route path="tarefas/nova" element={<AdicionarTarefa />} />
+            <Route path="teste/:id" element={<TesteIntroducao />} />
+            <Route path="teste/:id/responder" element={<TesteResponder />} />
+            <Route path="teste/:id/resultado" element={<TesteResultado />} />
+            <Route path="rotina" element={<Rotina />} />
+            <Route path="rotina/humor/nivel" element={<MoodStep1_Level />} />
+            <Route path="rotina/humor/sentimentos" element={<MoodStep2_Sentiments />} />
+            <Route path="rotina/humor/contexto" element={<MoodStep3_Context />} />
+            <Route path="rotina/humor/sucesso" element={<MoodSuccess />} />
+            <Route path="companheiro" element={<Companheiro />} />
+            <Route path="perfil" element={<Perfil />} />
+            <Route path="analise-humor" element={<AnaliseHumor />} />
+            <Route path="streak-calendar" element={<StreakCalendar />} />
+            <Route path="timeline-stats" element={<TimelineStats />} />
+            <Route path="reasons-stats" element={<ReasonsStats />} />
+            <Route path="sentiments-stats" element={<SentimentsStats />} />
+            <Route path="definicoes" element={<Definicoes />} />
+            <Route path="definicoes/nome" element={<EditarNome />} />
+            <Route path="definicoes/senha" element={<AlterarSenha />} />
+            <Route path="*" element={<Navigate to="/aprender" replace />} />
+          </Route>
+        </>
       ) : (
-        // --- ROTAS PÚBLICAS ---
+        // ============================================================
+        // ÁREA PÚBLICA (Não logado)
+        // ============================================================
         <>
           <Route path="/" element={
             <LandingBackground>
               <Welcome />
             </LandingBackground>
           } />
-
           <Route path="/login" element={
             <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center p-4">
-               <div className="w-full max-w-md">
-                 <Login />
-               </div>
+               <div className="w-full max-w-md"><Login /></div>
             </div>
           } />
-
           <Route path="/register" element={
             <div className="min-h-screen w-full bg-[#0f172a] flex items-center justify-center p-4">
-               <div className="w-full max-w-md">
-                  <Register />
-               </div>
+               <div className="w-full max-w-md"><Register /></div>
             </div>
           } />
-
-          {/* Rotas de Onboarding (Acessíveis se logado, mas controladas pelo FlowGuard se tentar sair) */}
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/quiz" element={<Quiz />} />
-          
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       )}

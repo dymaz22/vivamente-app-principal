@@ -4,45 +4,45 @@ import { useProfile } from '../../hooks/useProfile';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function FlowGuard({ children }) {
-  const { user } = useAuth();
-  const { isPro, onboardingCompleted, loading } = useProfile({ user });
+  const { user, session } = useAuth();
+  const { isPro, onboardingCompleted, loading } = useProfile(session);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (loading) return;
+    // Se estiver carregando ou sem usuário, não faz nada ainda
+    if (loading || !user) return;
 
-    // 1. Se não estiver logado, deixa o Router lidar (vai pro Login)
-    if (!user) return;
+    const path = location.pathname;
 
-    const currentPath = location.pathname;
-
-    // 2. Se NÃO for PRO -> Manda para Assinatura
+    // LÓGICA DE PROTEÇÃO
+    
+    // 1. Se NÃO é PRO -> Manda pagar (exceto se já estiver lá)
     if (!isPro) {
-      if (currentPath !== '/subscription') {
+      if (path !== '/subscription') {
         navigate('/subscription', { replace: true });
       }
       return;
     }
 
-    // 3. Se for PRO mas NÃO fez o Quiz -> Manda para o Quiz
+    // 2. Se é PRO mas NÃO fez Quiz -> Manda pro Quiz
     if (isPro && !onboardingCompleted) {
-      if (currentPath !== '/quiz') {
+      if (path !== '/quiz') {
         navigate('/quiz', { replace: true });
       }
       return;
     }
 
-    // 4. Se já fez tudo e tentar voltar para telas de onboarding -> Manda para Home
+    // 3. Se já fez tudo -> Não deixa voltar pra telas de entrada
     if (isPro && onboardingCompleted) {
-      if (currentPath === '/subscription' || currentPath === '/quiz') {
+      if (path === '/subscription' || path === '/quiz') {
         navigate('/aprender', { replace: true });
       }
     }
 
   }, [user, isPro, onboardingCompleted, loading, navigate, location]);
 
-  // Enquanto carrega o perfil, mostra uma tela de loading bonita
+  // Tela de Carregamento (Evita piscar conteúdo proibido)
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
