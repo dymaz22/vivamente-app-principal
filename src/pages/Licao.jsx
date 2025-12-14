@@ -1,179 +1,198 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, CheckCircle, Star, MessageCircle, Send, Loader2 } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
-import { Skeleton } from '../components/ui/skeleton';
-import PetalsAnimation from '../components/PetalsAnimation';
+import { ArrowLeft, CheckCircle, Star, MessageSquare, Send, User } from 'lucide-react';
 import { useLessonDetails, markLessonAsComplete, submitLessonRating, submitLessonComment } from '../hooks/useCourses';
 import { useAuth } from '../hooks/useAuth';
+import { Button } from '../components/ui/button';
+import { Skeleton } from '../components/ui/skeleton';
 
 const Licao = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { lessonDetails, loading, error, refetch } = useLessonDetails(parseInt(id), 'pt');
-  const [rating, setRating] = useState(0);
-  const [newComment, setNewComment] = useState('');
-  const [isCompleting, setIsCompleting] = useState(false);
-  const [isRating, setIsRating] = useState(false);
-  const [isCommenting, setIsCommenting] = useState(false);
+  const { lessonDetails, loading, refetch } = useLessonDetails(id);
+  
+  const [completing, setCompleting] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
 
-  React.useEffect(() => {
-    if (lessonDetails?.userProgress?.rating) {
-      setRating(lessonDetails.userProgress.rating);
-    }
-  }, [lessonDetails]);
+  // Função para pegar ID do YouTube
+  const getYouTubeId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[1].length === 11) ? match[1] : null;
+  };
 
   const handleComplete = async () => {
     if (!user) return;
-    setIsCompleting(true);
-    try {
-      const result = await markLessonAsComplete(parseInt(id), user.id);
-      if (result.success) {
-        refetch();
-      } else {
-        console.error('Erro ao marcar lição como completa:', result.error);
-      }
-    } catch (error) {
-      console.error('Erro ao marcar lição como completa:', error);
-    } finally {
-      setIsCompleting(false);
-    }
+    setCompleting(true);
+    await markLessonAsComplete(id, user.id);
+    await refetch();
+    setCompleting(false);
   };
 
-  const handleRating = async (newRating) => {
+  const handleRating = async (rating) => {
     if (!user) return;
-    setIsRating(true);
-    try {
-      const result = await submitLessonRating(parseInt(id), newRating, user.id);
-      if (result.success) {
-        setRating(newRating);
-        refetch();
-      } else {
-        console.error('Erro ao avaliar lição:', result.error);
-      }
-    } catch (error) {
-      console.error('Erro ao avaliar lição:', error);
-    } finally {
-      setIsRating(false);
-    }
+    await submitLessonRating(id, rating, user.id);
+    await refetch();
   };
 
-  // >>>>> FUNÇÃO handleAddComment CORRIGIDA <<<<<
-  const handleAddComment = async () => {
-    if (!newComment.trim() || !user) return; // Adicionada verificação de usuário
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!user || !commentText.trim()) return;
     
-    setIsCommenting(true);
-    try {
-      // Passando o ID da lição, o ID do usuário e o conteúdo do comentário
-      const result = await submitLessonComment(parseInt(id), user.id, newComment);
-      if (result.success) {
-        setNewComment(''); // Limpa o campo de texto
-        refetch(); // Recarrega os dados para mostrar o novo comentário
-      } else {
-        console.error('Erro ao adicionar comentário:', result.error);
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar comentário:', error);
-    } finally {
-      setIsCommenting(false);
-    }
+    setSendingComment(true);
+    await submitLessonComment(id, user.id, commentText);
+    setCommentText('');
+    await refetch();
+    setSendingComment(false);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative">
-        <PetalsAnimation />
-        <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-          <div className="flex items-center gap-4 mb-8"><Skeleton className="h-10 w-10 rounded-full bg-card/30" /><div><Skeleton className="h-8 w-64 mb-2 bg-card/30" /><Skeleton className="h-4 w-20 bg-card/30" /></div></div>
-          <div className="mb-8"><Skeleton className="aspect-video w-full bg-card/30 rounded-2xl" /></div>
-          <div className="mb-8"><Skeleton className="h-32 w-full bg-card/30 rounded-2xl" /></div>
-        </div>
+      <div className="min-h-screen bg-[#0f172a] p-4 flex flex-col gap-4">
+        <Skeleton className="w-full aspect-video rounded-xl bg-gray-800" />
+        <Skeleton className="h-8 w-3/4 bg-gray-800" />
       </div>
     );
   }
 
-  if (error) { return ( <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative flex items-center justify-center">...</div> ); }
-  if (!lessonDetails) { return ( <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative flex items-center justify-center">...</div> ); }
+  if (!lessonDetails) return null;
 
-  const isCompleted = lessonDetails.userProgress?.is_completed || false;
+  const videoId = getYouTubeId(lessonDetails.video_url);
+  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : null;
+  const isCompleted = lessonDetails.userProgress?.is_completed;
+  const userRating = lessonDetails.userProgress?.rating || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative">
-      <PetalsAnimation />
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-white hover:text-primary"><ArrowLeft className="w-6 h-6" /></Button>
+    <div className="min-h-screen bg-[#0f172a] text-white pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-[#0f172a]/95 backdrop-blur-md border-b border-gray-800 p-4 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-800 rounded-full">
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        <h1 className="text-lg font-semibold truncate">{lessonDetails.title}</h1>
+      </div>
+
+      {/* Player */}
+      <div className="w-full aspect-video bg-black sticky top-16 z-10">
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={lessonDetails.title}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-900">
+            <p>Vídeo indisponível</p>
+          </div>
+        )}
+      </div>
+
+      <div className="p-6 space-y-8">
+        {/* Conteúdo */}
+        <div>
+          <h2 className="text-xl font-bold mb-2">Sobre a aula</h2>
+          <p className="text-gray-300 leading-relaxed text-sm">
+            {lessonDetails.content || "Sem descrição."}
+          </p>
+        </div>
+
+        {/* Ações (Concluir e Avaliar) */}
+        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 space-y-6">
+          
+          {/* Botão Concluir */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-white">Progresso</h3>
+              <p className="text-xs text-gray-400">
+                {isCompleted ? "Aula concluída!" : "Marque ao terminar"}
+              </p>
+            </div>
+            <Button
+              onClick={handleComplete}
+              disabled={isCompleted || completing}
+              className={`
+                ${isCompleted 
+                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/20 border border-green-500/30' 
+                  : 'bg-purple-600 hover:bg-purple-700 text-white'}
+              `}
+            >
+              {isCompleted ? (
+                <><CheckCircle className="w-4 h-4 mr-2" /> Concluída</>
+              ) : (
+                completing ? "Salvando..." : "Concluir Aula"
+              )}
+            </Button>
+          </div>
+
+          <div className="h-px bg-gray-700/50" />
+
+          {/* Estrelas */}
           <div>
-            <h1 className="text-2xl font-bold text-white">{lessonDetails.title_pt}</h1>
-            <p className="text-white/60">Lição {lessonDetails.order || id}</p>
+            <h3 className="font-semibold text-white mb-2">O que achou?</h3>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star 
+                  key={star} 
+                  className={`w-8 h-8 cursor-pointer transition-all hover:scale-110 ${
+                    star <= userRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'
+                  }`}
+                  onClick={() => handleRating(star)}
+                />
+              ))}
+            </div>
           </div>
         </div>
-        {lessonDetails.video_url && (
-          <div className="mb-8">
-            <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-              <div className="aspect-video bg-black rounded-xl mb-4 flex items-center justify-center">
-                <iframe src={lessonDetails.video_url.replace('watch?v=', 'embed/')} title={lessonDetails.title_pt} className="w-full h-full rounded-xl" allowFullScreen />
+
+        {/* Área de Comentários */}
+        <div>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-purple-400" />
+            Comentários ({lessonDetails.comments?.length || 0})
+          </h3>
+
+          {/* Formulário */}
+          <form onSubmit={handleComment} className="flex gap-2 mb-6">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Deixe sua dúvida ou comentário..."
+              className="flex-grow bg-gray-800 border border-gray-700 rounded-full px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+            />
+            <button 
+              type="submit" 
+              disabled={!commentText.trim() || sendingComment}
+              className="p-3 bg-purple-600 rounded-full hover:bg-purple-700 disabled:opacity-50 transition-colors"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </form>
+
+          {/* Lista de Comentários */}
+          <div className="space-y-4">
+            {lessonDetails.comments?.map((comment) => (
+              <div key={comment.id} className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-gray-400" />
+                </div>
+                <div className="bg-gray-800/50 rounded-2xl rounded-tl-none p-3 px-4">
+                  <p className="text-sm text-gray-200">{comment.content}</p>
+                  <span className="text-[10px] text-gray-500 mt-1 block">
+                    {new Date(comment.created_at).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        {lessonDetails.content_pt && (
-          <div className="mb-8">
-            <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Conteúdo da Lição</h2>
-              <div className="text-white/80 leading-relaxed whitespace-pre-wrap">{lessonDetails.content_pt}</div>
-            </div>
-          </div>
-        )}
-        <div className="mb-8">
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">{isCompleted ? 'Lição Concluída!' : 'Marcar como Concluída'}</h3>
-                <p className="text-white/60">{isCompleted ? 'Parabéns! Você completou esta lição.' : 'Clique para marcar esta lição como concluída.'}</p>
-              </div>
-              <Button onClick={handleComplete} disabled={isCompleted || isCompleting} className={isCompleted ? 'bg-green-600' : ''}>
-                {isCompleting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Marcando...</>) : 
-                 isCompleted ? (<><CheckCircle className="w-4 h-4 mr-2" />Concluída</>) : ('Marcar como Concluída')}
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className="mb-8">
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Avalie esta Lição</h3>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (<button key={star} onClick={() => handleRating(star)} disabled={isRating} className="transition-colors disabled:opacity-50"><Star className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} /></button>))}
-              {rating > 0 && (<span className="text-white/70 ml-2">{rating} de 5 estrelas</span>)}
-              {isRating && (<Loader2 className="w-4 h-4 ml-2 animate-spin text-primary" />)}
-            </div>
-          </div>
-        </div>
-        <div className="mb-8">
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><MessageCircle className="w-5 h-5" />Comentários ({lessonDetails.comments?.length || 0})</h3>
-            <div className="mb-6">
-              <Textarea placeholder="Adicione seu comentário sobre esta lição..." value={newComment} onChange={(e) => setNewComment(e.target.value)} className="mb-3" disabled={isCommenting} />
-              <Button onClick={handleAddComment} disabled={!newComment.trim() || isCommenting}>
-                {isCommenting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enviando...</>) : (<><Send className="w-4 h-4 mr-2" />Enviar Comentário</>)}
-              </Button>
-            </div>
-            {/* O CÓDIGO A SEGUIR ESTÁ INCOMPLETO, VAMOS COMPLETÁ-LO NO PRÓXIMO PASSO */}
-            <div className="space-y-4">
-              {lessonDetails.comments && lessonDetails.comments.length > 0 ? (
-                lessonDetails.comments.map((comment) => (
-                  <div key={comment.id} className="border-b border-border/30 pb-4 last:border-b-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">{comment.user_id}</span>
-                      <span className="text-white/50 text-sm">{new Date(comment.created_at).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                    <p className="text-white/80">{comment.content}</p>
-                  </div>
-                ))
-              ) : (<p className="text-white/60 text-center py-4">Nenhum comentário ainda. Seja o primeiro a comentar!</p>)}
-            </div>
+            ))}
+            
+            {(!lessonDetails.comments || lessonDetails.comments.length === 0) && (
+              <p className="text-gray-500 text-sm text-center py-4">Seja o primeiro a comentar!</p>
+            )}
           </div>
         </div>
       </div>

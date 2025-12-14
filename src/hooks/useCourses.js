@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 
-export const useCourses = (language = 'pt') => {
+// --- 1. LISTA DE CURSOS (USADO NA HOME) ---
+export const useCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,10 +12,23 @@ export const useCourses = (language = 'pt') => {
     try {
       setLoading(true);
       setError(null);
+      
       const { data, error } = await supabase
-        .from('courses').select(`id, title_pt, description_pt, image_url`).order('id', { ascending: true });
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
-      setCourses(data || []);
+
+      // Normaliza os dados para evitar erros de digitação no banco
+      const formattedData = data.map(course => ({
+        ...course,
+        title: course.title || course.title_pt || 'Sem título',
+        description: course.description || course.description_pt || '',
+        image_url: course.image_url || course.thumbnail_url || 'https://placehold.co/600x400/1e1e2e/FFF?text=Curso'
+      }));
+
+      setCourses(formattedData || []);
     } catch (err) {
       console.error('Erro ao buscar cursos:', err);
       setError(err.message);
@@ -23,30 +37,42 @@ export const useCourses = (language = 'pt') => {
     }
   };
 
-  useEffect(() => { fetchCourses(); }, [language]);
+  useEffect(() => { fetchCourses(); }, []);
 
   return { courses, loading, error, refetch: fetchCourses };
 };
 
-export const useCourseDetails = (courseId, language = 'pt') => {
+// --- 2. DETALHES DO CURSO ---
+export const useCourseDetails = (courseId) => {
     const [courseDetails, setCourseDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
   
     const fetchCourseDetails = async () => {
+        if (!courseId) return;
         try {
             setLoading(true);
             const { data: course, error: courseError } = await supabase
-                .from('courses').select(`id, title_pt, description_pt, image_url`).eq('id', courseId).single();
+                .from('courses').select('*').eq('id', courseId).single();
+            
             if (courseError) throw courseError;
 
             const { data: lessons, error: lessonsError } = await supabase
-                .from('lessons').select(`id, title_pt`).eq('course_id', courseId).order('order', { ascending: true });
+                .from('lessons').select('*').eq('course_id', courseId).order('order', { ascending: true });
+            
             if (lessonsError) throw lessonsError;
 
-            setCourseDetails({ ...course, lessons });
+            setCourseDetails({ 
+                ...course, 
+                title: course.title || course.title_pt,
+                description: course.description || course.description_pt,
+                lessons: lessons.map(l => ({
+                    ...l,
+                    title: l.title || l.title_pt
+                }))
+            });
         } catch (err) {
-            console.error('Erro ao buscar detalhes do curso:', err);
+            console.error('Erro ao buscar detalhes:', err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -54,48 +80,59 @@ export const useCourseDetails = (courseId, language = 'pt') => {
     };
   
     useEffect(() => {
-      if (courseId) fetchCourseDetails();
-    }, [courseId, language]);
+      fetchCourseDetails();
+    }, [courseId]);
   
     return { courseDetails, loading, error, refetch: fetchCourseDetails };
 };
 
-export const useLessonDetails = (lessonId, language = 'pt') => {
+// --- 3. DETALHES DA LIÇÃO ---
+export const useLessonDetails = (lessonId) => {
   const [lessonDetails, setLessonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
   const fetchLessonDetails = async () => {
-    if (!lessonId) {
-        setLoading(false);
-        setError("ID da lição não fornecido.");
-        return;
-    }
+    if (!lessonId) return;
     try {
       setLoading(true);
-      setError(null);
       
+      // Busca a lição
       const { data: lesson, error: lessonError } = await supabase
-        .from('lessons').select(`id, course_id, title_pt, content_pt, video_url, order`).eq('id', lessonId).single();
+        .from('lessons').select('*').eq('id', lessonId).single();
+      
       if (lessonError) throw lessonError;
-      if (!lesson) throw new Error('Lição não encontrada');
 
-      const { data: comments, error: commentsError } = await supabase
-        .from('lesson_comments').select('id, user_id, content, created_at').eq('lesson_id', lessonId).order('created_at', { ascending: false });
-      if (commentsError) console.warn("Não foi possível carregar comentários:", commentsError);
+      // Busca comentários
+      const { data: comments } = await supabase
+        .from('lesson_comments')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .order('created_at', { ascending: false });
 
+      // Busca progresso do usuário
       let userProgress = null;
       if (user) {
-          const { data: progressData, error: progressError } = await supabase
-            .from('user_progress').select('is_completed, completed_at, rating').eq('user_id', user.id).eq('lesson_id', lessonId).maybeSingle();
-          if (progressError) console.warn("Não foi possível carregar progresso:", progressError);
-          userProgress = progressData;
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('lesson_id', lessonId)
+          .maybeSingle();
+        userProgress = progress;
       }
 
-      setLessonDetails({ ...lesson, comments: comments || [], userProgress });
+      setLessonDetails({
+          ...lesson,
+          title: lesson.title || lesson.title_pt,
+          content: lesson.content || lesson.content_pt,
+          comments: comments || [],
+          userProgress
+      });
+
     } catch (err) {
-      console.error('Erro ao buscar detalhes da lição:', err);
+      console.error('Erro lição:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -104,15 +141,14 @@ export const useLessonDetails = (lessonId, language = 'pt') => {
 
   useEffect(() => {
     fetchLessonDetails();
-  }, [lessonId, language, user]);
+  }, [lessonId, user]);
 
   return { lessonDetails, loading, error, refetch: fetchLessonDetails };
 };
 
+// --- 4. MARCAR COMO COMPLETA ---
 export const markLessonAsComplete = async (lessonId, userId) => {
-  if (!lessonId || !userId) {
-    return { success: false, error: "ID do usuário ou da lição não fornecido." };
-  }
+  if (!lessonId || !userId) return { success: false };
   
   try {
     const { error } = await supabase
@@ -122,24 +158,18 @@ export const markLessonAsComplete = async (lessonId, userId) => {
         lesson_id: lessonId,
         is_completed: true,
         completed_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id, lesson_id'
-      });
+      }, { onConflict: 'user_id, lesson_id' });
 
     if (error) throw error;
-
     return { success: true };
   } catch (error) {
-    console.error('Erro ao marcar lição como completa:', error);
+    console.error('Erro ao completar:', error);
     return { success: false, error: error.message };
   }
 };
 
+// --- 5. AVALIAR LIÇÃO ---
 export const submitLessonRating = async (lessonId, rating, userId) => {
-  if (!lessonId || !userId || !rating) {
-    return { success: false, error: "Dados insuficientes para avaliar." };
-  }
-  
   try {
     const { error } = await supabase
       .from('user_progress')
@@ -147,41 +177,34 @@ export const submitLessonRating = async (lessonId, rating, userId) => {
         user_id: userId,
         lesson_id: lessonId,
         rating: rating,
-      }, {
-        onConflict: 'user_id, lesson_id'
-      });
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id, lesson_id' });
 
     if (error) throw error;
-
     return { success: true };
   } catch (error) {
-    console.error('Erro ao avaliar lição:', error);
+    console.error('Erro ao avaliar:', error);
     return { success: false, error: error.message };
   }
 };
 
-// >>>>> FUNÇÃO submitLessonComment TOTALMENTE IMPLEMENTADA <<<<<
+// --- 6. COMENTAR LIÇÃO ---
 export const submitLessonComment = async (lessonId, userId, content) => {
-  if (!lessonId || !userId || !content) {
-    return { success: false, error: "Dados insuficientes para comentar." };
-  }
-
   try {
     const { data, error } = await supabase
       .from('lesson_comments')
       .insert({
         lesson_id: lessonId,
         user_id: userId,
-        content: content,
+        content: content
       })
       .select()
       .single();
 
     if (error) throw error;
-
     return { success: true, data };
   } catch (error) {
-    console.error('Erro ao adicionar comentário:', error);
+    console.error('Erro ao comentar:', error);
     return { success: false, error: error.message };
   }
 };

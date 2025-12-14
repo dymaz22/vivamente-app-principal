@@ -1,105 +1,150 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Wrench } from 'lucide-react';
+// Importamos os ícones dinâmicos
+import { Play, Info, BookOpen, Wrench, ArrowRight, Heart, Wind, Droplet, Sun, Moon, Coffee, Book } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import CardItem from '../components/CardItem';
 import HorizontalCarousel from '../components/HorizontalCarousel';
 import PetalsAnimation from '../components/PetalsAnimation';
-
-// Importando apenas o hook que existe
 import { useCourses } from '../hooks/useCourses';
+import { useTools } from '../hooks/useTools'; // Novo Hook
+
+// Mapa de Ícones (Converte texto do Admin em Ícone Visual)
+const iconMap = {
+  heart: Heart,
+  wind: Wind,
+  droplet: Droplet,
+  sun: Sun,
+  moon: Moon,
+  coffee: Coffee,
+  book: Book,
+  default: Wrench
+};
 
 const AprenderHome = () => {
   const navigate = useNavigate();
+  const { courses, loading: coursesLoading } = useCourses();
+  const { tools, loading: toolsLoading } = useTools();
 
-  // Usando apenas o hook que existe
-  const { courses, loading: coursesLoading, error: coursesError } = useCourses('pt');
+  const featuredCourse = courses && courses.length > 0 ? courses[0] : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f0f23] relative">
+    <div className="min-h-screen bg-[#0f172a] pb-20 relative overflow-x-hidden">
       <PetalsAnimation />
       
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Aprender</h1>
-          <p className="text-white/70">Desenvolva seu bem-estar com conteúdo personalizado</p>
-        </div>
-
-        {/* A SEÇÃO "CONTINUE FAZENDO" FOI REMOVIDA */}
-
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-semibold text-white">Cursos</h2>
-            </div>
-            <Button 
-              variant="ghost" 
-              className="text-primary hover:text-primary/80"
-              onClick={() => navigate('/cursos')}
+      {/* === HERO SECTION === */}
+      <div className="relative w-full h-[50vh] min-h-[400px]">
+        {coursesLoading ? (
+          <Skeleton className="w-full h-full bg-gray-800" />
+        ) : featuredCourse ? (
+          <>
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${featuredCourse.image_url})` }}
             >
-              Ver todos
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-          
-          {coursesLoading ? (
-            <HorizontalCarousel>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="min-w-[280px]">
-                  <Skeleton className="h-48 w-full rounded-2xl bg-card/30" />
-                </div>
-              ))}
-            </HorizontalCarousel>
-          ) : coursesError ? (
-            <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-              <p className="text-white/70">Erro ao carregar cursos</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/60 to-transparent" />
             </div>
-          ) : courses && Array.isArray(courses) && courses.length > 0 ? (
+
+            <div className="absolute bottom-0 left-0 w-full p-6 pb-12 z-10">
+              <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full uppercase tracking-wider mb-3 inline-block">
+                Destaque
+              </span>
+              <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                {featuredCourse.title}
+              </h1>
+              <p className="text-gray-200 text-sm line-clamp-2 max-w-md mb-6 drop-shadow-md">
+                {featuredCourse.description}
+              </p>
+              
+              <div className="flex gap-3">
+                <Button 
+                  className="bg-white text-black hover:bg-gray-200 font-bold px-6 rounded-lg flex items-center gap-2"
+                  onClick={() => navigate(`/curso/${featuredCourse.id}`)}
+                >
+                  <Play className="w-5 h-5 fill-black" />
+                  Começar Agora
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-900">
+            <p className="text-gray-400">Carregando conteúdo...</p>
+          </div>
+        )}
+      </div>
+
+      <div className="container mx-auto px-4 -mt-6 relative z-20 space-y-8">
+        
+        {/* === TRILHO DE CURSOS === */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg font-bold text-white">Cursos Disponíveis</h2>
+          </div>
+
+          {coursesLoading ? (
+            <div className="flex gap-4"><Skeleton className="w-[200px] h-[120px] bg-gray-800 rounded-xl" /></div>
+          ) : courses && courses.length > 0 ? (
             <HorizontalCarousel>
               {courses.map((course) => (
-                course && course.id ? (
-                  <CardItem
-                    key={course.id}
-                    image_url={course.image_url || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"}
-                    title={course.title_pt || "Curso sem título"}
-                    subtitle={course.description_pt || "Descrição não disponível"}
-                    tag="Curso"
-                    onClick={() => navigate(`/curso/${course.id}`)}
-                  />
-                ) : null
-              )).filter(Boolean)}
+                <CardItem
+                  key={course.id}
+                  image_url={course.image_url}
+                  title={course.title}
+                  subtitle="Curso Completo"
+                  tag="Novo"
+                  onClick={() => navigate(`/curso/${course.id}`)}
+                />
+              ))}
             </HorizontalCarousel>
           ) : (
-            <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-              <p className="text-white/70">Nenhum curso disponível</p>
-            </div>
+            <p className="text-gray-500 text-sm">Nenhum curso encontrado.</p>
           )}
         </section>
 
-        <section className="mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Wrench className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold text-white">Ferramentas</h2>
+        {/* === TRILHO DE FERRAMENTAS (NOVO) === */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Wrench className="w-5 h-5 text-blue-400" />
+            <h2 className="text-lg font-bold text-white">Ferramentas Rápidas</h2>
           </div>
           
-          <div 
-            className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 cursor-pointer hover:bg-card/50 transition-all duration-200"
-            onClick={() => navigate('/tarefas')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Tarefas do Dia</h3>
-                <p className="text-white/70">Organize suas atividades de bem-estar</p>
-              </div>
-              <ArrowRight className="w-6 h-6 text-primary" />
-            </div>
+          <div className="grid grid-cols-1 gap-3">
+            {toolsLoading ? (
+               <Skeleton className="w-full h-16 bg-gray-800 rounded-xl" />
+            ) : tools && tools.length > 0 ? (
+              tools.map((tool) => {
+                // Converte o nome do ícone (string) para o Componente Visual
+                const IconComponent = iconMap[tool.icon_name] || iconMap.default;
+                
+                return (
+                  <div 
+                    key={tool.id}
+                    className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-800 transition-colors"
+                    onClick={() => navigate('/tarefas')} // Futuramente podemos abrir direto a ferramenta
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <IconComponent className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">{tool.text_pt}</h3>
+                        <p className="text-xs text-gray-400">
+                          {tool.tool_categories?.name_pt || "Geral"}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500" />
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 text-sm">Nenhuma ferramenta encontrada.</p>
+            )}
           </div>
         </section>
-
-        {/* A SEÇÃO "TESTES" FOI REMOVIDA */}
-        
       </div>
     </div>
   );
