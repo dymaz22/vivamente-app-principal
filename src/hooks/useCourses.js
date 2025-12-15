@@ -20,7 +20,7 @@ export const useCourses = () => {
 
       if (error) throw error;
 
-      // Normaliza os dados para evitar erros de digitação no banco
+      // Normaliza os dados
       const formattedData = data.map(course => ({
         ...course,
         title: course.title || course.title_pt || 'Sem título',
@@ -42,7 +42,7 @@ export const useCourses = () => {
   return { courses, loading, error, refetch: fetchCourses };
 };
 
-// --- 2. DETALHES DO CURSO ---
+// --- 2. DETALHES DO CURSO (MÉTODO SEGURO DE 2 PASSOS) ---
 export const useCourseDetails = (courseId) => {
     const [courseDetails, setCourseDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -52,11 +52,13 @@ export const useCourseDetails = (courseId) => {
         if (!courseId) return;
         try {
             setLoading(true);
+            
+            // PASSO 1: Busca o Curso
             const { data: course, error: courseError } = await supabase
                 .from('courses').select('*').eq('id', courseId).single();
-            
             if (courseError) throw courseError;
 
+            // PASSO 2: Busca as Lições (sem tentar buscar módulos)
             const { data: lessons, error: lessonsError } = await supabase
                 .from('lessons').select('*').eq('course_id', courseId).order('order', { ascending: true });
             

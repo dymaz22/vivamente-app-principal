@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
+import TransitionScreen from '../components/TransitionScreen';
 
 export default function Quiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showTransition, setShowTransition] = useState(false); // Novo estado
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -308,14 +310,12 @@ export default function Quiz() {
   const finishQuiz = async () => {
     setLoading(true);
     try {
-      // 1. Criar o "Dossiê" para a IA em formato JSON (mais limpo e fácil de ler)
+      // 1. Criar o "Dossiê" para a IA
       const aiContextData = {
         data_coleta: new Date().toISOString(),
-        ...answers // Espalha todas as 25 respostas aqui
+        ...answers 
       };
 
-      // 2. Formatar o Dossiê para o System Prompt (Texto)
-      // A IA lê o JSON, mas o texto é mais fácil de debugar
       const aiContextText = `
         PERFIL COMPLETO DO USUÁRIO (QUIZ DE 25 PERGUNTAS):
         - Objetivo Principal: ${aiContextData.objetivo_principal}
@@ -347,21 +347,21 @@ export default function Quiz() {
         INSTRUÇÃO PARA A IA: Use esses dados para personalizar o atendimento e as sugestões de ferramentas.
       `;
 
-      // 3. Salvar no Supabase
+      // 2. Salvar no Supabase
       if (user) {
         const { error } = await supabase
           .from('profiles')
           .update({ 
             onboarding_completed: true,
-            ai_context: aiContextText // Salva o dossiê completo
+            ai_context: aiContextText 
           })
           .eq('id', user.id);
 
         if (error) throw error;
       }
 
-      // 4. Redirecionar
-      navigate('/aprender', { replace: true });
+      // 3. Ativar Transição (Em vez de navegar direto)
+      setShowTransition(true);
 
     } catch (error) {
       console.error('Erro ao salvar quiz:', error);
@@ -371,6 +371,11 @@ export default function Quiz() {
   };
 
   const progress = ((currentStep + 1) / questions.length) * 100;
+
+  // Se a transição estiver ativa, renderiza APENAS ela
+  if (showTransition) {
+    return <TransitionScreen onComplete={() => navigate('/aprender', { replace: true })} />;
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#0f172a] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">

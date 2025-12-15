@@ -8,7 +8,7 @@ import CardItem from '../components/CardItem';
 import HorizontalCarousel from '../components/HorizontalCarousel';
 import PetalsAnimation from '../components/PetalsAnimation';
 import { useCourses } from '../hooks/useCourses';
-import { useTools } from '../hooks/useTools'; // Novo Hook
+import { useTools } from '../hooks/useTools';
 
 // Mapa de Ícones (Converte texto do Admin em Ícone Visual)
 const iconMap = {
@@ -116,14 +116,13 @@ const AprenderHome = () => {
                <Skeleton className="w-full h-16 bg-gray-800 rounded-xl" />
             ) : tools && tools.length > 0 ? (
               tools.map((tool) => {
-                // Converte o nome do ícone (string) para o Componente Visual
                 const IconComponent = iconMap[tool.icon_name] || iconMap.default;
                 
                 return (
                   <div 
                     key={tool.id}
                     className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-800 transition-colors"
-                    onClick={() => navigate('/tarefas')} // Futuramente podemos abrir direto a ferramenta
+                    onClick={() => navigate('/tarefas')}
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-blue-500/20 rounded-lg">
