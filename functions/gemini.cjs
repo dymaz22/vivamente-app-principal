@@ -1,10 +1,10 @@
-// functions/gemini.cjs
+// functions/gemini.js
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
 
   if (event.httpMethod === "OPTIONS") {
@@ -12,70 +12,118 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return { statusCode: 500, headers, body: JSON.stringify({ error: "Chave API ausente" }) };
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: "GEMINI_API_KEY não configurada" }),
+      };
     }
 
-    const { message, history, aiContext } = JSON.parse(event.body);
+    const body = JSON.parse(event.body || "{}");
+    const message = body.message;
+    const history = Array.isArray(body.history) ? body.history : [];
+    const aiContext = body.aiContext ?? null;
 
-    const systemInstructionText = `
-      INSTRUÇÃO DO SISTEMA:
-      Você é o 'Companheiro Vivamente', uma IA psicológica empática.
-      Seja breve, acolhedor e fale Português do Brasil.
-      ${aiContext ? `CONTEXTO DO USUÁRIO: ${JSON.stringify(aiContext)}` : ''}
-      ---------------------------------------------------
-    `;
-
-    let contents = [];
-    if (history.length > 0) {
-      contents = history.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      }));
+    if (!message || typeof message !== "string") {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Mensagem inválida" }),
+      };
     }
 
-    const finalMessage = `${systemInstructionText}\n\nMensagem do usuário: ${message}`;
-    contents.push({ role: 'user', parts: [{ text: finalMessage }] });
+    // ✅ Limita histórico pra não estourar contexto/tokens
+    const lastMessages = history.slice(-10).map((msg) => ({
+      role: msg?.sender === "user" ? "user" : "model",
+      parts: [{ text: String(msg?.text ?? "").slice(0, 2000) }],
+    }));
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-    
-    console.log("🔹 Enviando para o Google...");
+    // ✅ Instrução bem clara: curto, espaçado, com emojis e fácil de ler
+    const systemInstruction = `
+Você é o Companheiro Vivamente.
+Fale em Português do Brasil.
+Responda SEMPRE curto e fácil de ler.
+
+REGRAS DE FORMATAÇÃO:
+- Use parágrafos curtos
+- Use quebras de linha (uma linha em branco entre ideias)
+- Use poucos emojis (máx. 5) para guiar leitura
+- Use bullets quando listar passos
+
+TAMANHO:
+- Máximo 6 linhas (curtas). Se precisar, pergunte 1 coisa no final.
+
+${aiContext ? `CONTEXTO DO USUÁRIO (JSON): ${JSON.stringify(aiContext)}` : ""}
+
+Agora responda o usuário:
+`.trim();
+
+    const contents = [
+      ...lastMessages,
+      {
+        role: "user",
+        parts: [{ text: `${systemInstruction}\n\nMensagem do usuário: ${message}` }],
+      },
+    ];
+
+    const url =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent" +
+      `?key=${encodeURIComponent(apiKey)}`;
 
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: contents })
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 260, // curto, mas suficiente pra não cortar no meio
+        },
+      }),
     });
 
     const data = await response.json();
 
-    // ==========================================================
-    // O ESPIÃO: VAI MOSTRAR O JSON REAL NO TERMINAL
-    // ==========================================================
-    console.log("📦 RESPOSTA DO GOOGLE (JSON):");
-    console.log(JSON.stringify(data, null, 2)); 
-    // ==========================================================
+    // Log útil pra debugar quando vier vazio/bloqueado
+    const finishReason = data?.candidates?.[0]?.finishReason;
+    const promptBlockReason = data?.promptFeedback?.blockReason;
 
     if (!response.ok) {
-      throw new Error(data.error?.message || "Erro na API do Google");
+      const msg = data?.error?.message || "Erro na API Gemini";
+      console.error("❌ Gemini HTTP Error:", response.status, msg);
+      throw new Error(msg);
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta.";
+    const parts = data?.candidates?.[0]?.content?.parts;
+    const text = Array.isArray(parts)
+      ? parts.map((p) => p?.text).filter(Boolean).join("")
+      : "";
+
+    if (!text) {
+      console.warn("⚠️ Gemini sem texto. finishReason:", finishReason, "blockReason:", promptBlockReason);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          text: "Tive um bloqueio rápido aqui 😕\n\nMe diz em 1 frase: o que você quer resolver agora?",
+        }),
+      };
+    }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ text }),
     };
-
-  } catch (error) {
-    console.error("🔥 ERRO:", error);
+  } catch (err) {
+    console.error("🔥 Erro Gemini:", err);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: "Erro ao falar com a IA" }),
     };
   }
 };
