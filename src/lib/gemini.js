@@ -1,21 +1,38 @@
 // src/lib/gemini.js
-export const sendMessageToGemini = async (message, history, aiContext = "") => {
-  try {
-    // Chama a nossa função local (que age como proxy seguro)
-    const res = await fetch("/.netlify/functions/gemini", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, history, aiContext }),
-    });
+// Mantemos o nome para não quebrar imports antigos
+// Agora aponta para OpenAI + memória + eventos
 
-    if (!res.ok) {
-      throw new Error(`Erro na API: ${res.status}`);
+import { supabase } from './supabaseClient';
+
+export async function sendMessageToGemini(message, history = []) {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return 'Usuário não autenticado.';
     }
 
-    const data = await res.json();
-    return data.text;
-  } catch (error) {
-    console.error("Erro ao falar com a Function:", error);
-    return "Estou com dificuldade de conectar agora. Tente novamente em instantes.";
+    const res = await fetch('/.netlify/functions/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        history,
+        userId: user.id,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.error || 'Erro na IA');
+    }
+
+    return data.text || 'Não consegui responder agora.';
+  } catch (err) {
+    console.error('Erro ao falar com a IA:', err);
+    return 'Estou com dificuldade agora. Tente novamente em instantes.';
   }
-};
+}
